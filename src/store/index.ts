@@ -1,4 +1,9 @@
-import { createStore } from 'vuex'
+import { createStore } from 'vuex';
+import { AppState } from './modules/hrissue';
+
+export interface RootState {
+  app: AppState;
+}
 
 export default createStore({
   state: {
@@ -9,4 +14,4 @@ export default createStore({
   },
   modules: {
   }
-})
+});
