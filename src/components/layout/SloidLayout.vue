@@ -1,10 +1,10 @@
 <template>
   <a-layout  id="components-layout-demo-side">
-    <a-layout-sider theme="dark" v-model:collapsed="collapsed" class="sloid-layout" collapsible>
+    <a-layout-sider  theme="light" v-model:collapsed="collapsed" class="sloid-layout" @collapsible="false">
       <slot name="menu" />
     </a-layout-sider>
-    <a-layout>
-      <a-layout-content style="margin: 0 16px">
+    <a-layout class="special-layout">
+      <a-layout-content>
         <slot name="content" />
       </a-layout-content>
     </a-layout>
@@ -24,16 +24,23 @@ export default class SloidLayout extends Vue {
 <style lang='scss' scope>
 #components-layout-demo-side .logo {
   height: 32px;
-  background: rgba(255, 255, 255, 0.2);
+  background:#f6faf9;
   margin: 16px;
 }
 #components-layout-demo-side{
   height: 100%;
 }
 .sloid-layout {
+  width:18.8rem!important;
+  flex:unset!important;
+  max-width: unset!important;
   .ant-layout-sider-trigger {
     bottom: unset;
   }
-
+  background: #ffffff;
+  margin-right: 10px;
+}
+.special-layout{
+  background: #ffffff;
 }
 </style>

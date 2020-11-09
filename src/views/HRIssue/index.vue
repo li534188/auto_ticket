@@ -1,9 +1,9 @@
 <template>
   <div class="about">
-    <a-button @click="test">測試</a-button>
+    <!-- <a-button @click="test">測試</a-button> -->
     <sloid-layout >
       <template v-slot:menu>
-        <a-menu  theme="dark" style="text-align:left" v-model:selectedKeys="selectedKeys" mode="vertical">
+        <a-menu  class="template-menu" theme="light" v-model:selectedKeys="selectedKeys" mode="vertical">
           <a-menu-item key="1">
             <pie-chart-outlined />
             <span>New Employees</span>
@@ -26,6 +26,11 @@
 </template>
 
 <script lang="ts">
+
+enum RouterKeys {
+  template ='/hrissue/template',
+  employee = '/hrissue/employee'
+}
 import { Options, Vue, } from 'vue-class-component';
 import { Watch } from 'vue-property-decorator';
 import SloidLayout from '@/components/layout/SloidLayout.vue';
@@ -49,12 +54,11 @@ export default class HRIssue extends Vue {
   private selectedKeys: string [] = ['1'];
 
   mounted() {
-    HRIssueModule.asyncChangeName();
-
+    HRIssueModule.asyncGetIssueList();
   }
 
   get datas() {
-    return HRIssueModule.datas;
+    return HRIssueModule.hrIssueList;
   }
 
   @Watch('selectedKeys')
@@ -62,15 +66,13 @@ export default class HRIssue extends Vue {
     console.log(value[0]);
     switch (value[0]) {
     case '1':
-      console.log(1111);
-      this.$router.push('/hrissue/employee');
+      this.$router.push(RouterKeys.employee);
       break;
     case '2':
-      console.log(222);
-      this.$router.push('/hrissue/employee');
+      this.$router.push(RouterKeys.employee);
       break;
     case '3':
-      this.$router.push('/hrissue/template');
+      this.$router.push(RouterKeys.template);
       break;
     default:
       break;
@@ -79,7 +81,6 @@ export default class HRIssue extends Vue {
 
   @Watch('datas')
   private onDatasChange(value: any) {
-    console.log(99999999);
     console.log(value[0].title);
   }
 
@@ -100,5 +101,10 @@ export default class HRIssue extends Vue {
   .about{
     height: 100%;
     width: 100%
+  }
+  .template-menu{
+    background: transparent;
+    text-align: left;
+    color: #6a778b;
   }
 </style>>

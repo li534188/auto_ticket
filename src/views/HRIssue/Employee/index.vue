@@ -1,86 +1,13 @@
 <template>
   <div class="wrapper">
-    <div class="sloid">
-      <header>
-        pending hr issue
-        <div>
-          <span>order by</span>
-          <a-radio-group v-model:value="ridaoValue">
-            <a-radio style="margin-right:3rem"  value="0">
-              Time
-            </a-radio>
-            <a-radio style="margin-right:3rem"  value="1">
-              Priority
-            </a-radio>
-          </a-radio-group>
-        </div>
-      </header>
-      <section>
-        <a-list item-layout="horizontal" :data-source="datas">
-          <template v-slot:renderItem="{ item }">
-            <a-list-item>
-              <a-list-item-meta
-                description="Ant Design, a design language for background applications, is refined by Ant UED Team"
-              >
-                <template v-slot:title>
-                  <a href="https://www.antdv.com/">{{ item.title }}</a>
-                </template>
-                <template v-slot:avatar>
-                  <a-avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
-                </template>
-              </a-list-item-meta>
-            </a-list-item>
-          </template>
-        </a-list>
-      </section>
+    <div class="left-content">
+      <employee-header />
     </div>
     <div class="divider"/>
-    <div class="content">
-      <header>
-        HR-113
-      </header>
-      <section class="content-details">
-        <a-row v-for="(item, index) in info" :key="index">
-          <a-col  :span="4">
-            <span class="lable">{{item.title}}</span>
-          </a-col>
-          <a-col  :span="16">
-            <span class="content">{{item.value}}</span>
-          </a-col>
-        </a-row>
-      </section>
-      <div class="content-divider"/>
-      <div>
-        <span>Creating tickets and confluence page for</span>
-        <div class="content-progress">
-          <a-progress :percent="50" status="active" />
-        </div>
-      </div>
-      <div class="content-divider"/>
-      <section class="content-list">
-        <div  class="content-list-details">
-          <header>Access Tickets</header>
-          <section>
-            <a-list item-layout="horizontal" :data-source="datas">
-              <template v-slot:renderItem="{ item }">
-                <a-list-item>
-                  <a-list-item-meta
-                    description="Ant Design, a design language for background applications, is refined by Ant UED Team"
-                  >
-                    <template v-slot:title>
-                      <a href="https://www.antdv.com/">{{ item.title }}</a>
-                    </template>
-                    <template v-slot:avatar>
-                      <a-avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
-                    </template>
-                  </a-list-item-meta>
-                </a-list-item>
-              </template>
-            </a-list>
-          </section>
-        </div>
-      </section>
+    <div class="right-content">
+      <employee-content />
     </div>
+
   </div>
 </template>
 <script lang="ts">
@@ -89,13 +16,15 @@ interface InfoType{
   value: string;
 }
 import { Options, Vue, } from 'vue-class-component';
-// import { Watch } from 'vue-property-decorator';
-// import SloidLayout from '@/components/layout/SloidLayout.vue';
-
-import SloidLayout from '@/components/layout/SloidLayout.vue';
+import EmployeeHeader from './EmployeeHeader.vue';
+import EmployeeContent from './EmployeeContent.vue';
+import { RedoOutlined, CheckCircleOutlined } from '@ant-design/icons-vue';
 @Options({
   components: {
-    SloidLayout,
+    RedoOutlined,
+    CheckCircleOutlined,
+    EmployeeHeader,
+    EmployeeContent
   },
 })
 export default class Employee extends Vue {
@@ -139,23 +68,14 @@ export default class Employee extends Vue {
   .wrapper{
     width: 100%;
     height: 100%;
-    padding:0 50px;
     padding-top: 1%;
-    .sloid{
-      width:20%;
-      float: left;
+    display: flex;
+    flex-direction: row;
+    .left-content{
+      flex: 1 1 20%;
     }
-    .content{
-      width:78%;
-      float: right;
-      .content-divider{
-        border: 1px solid rgba($color: #000000, $alpha: .1);
-        width: 80%;
-      }
-      .content-progress{
-        display: inline-block;
-        width: 50%;
-      }
+    .right-content{
+      flex: 1 1 80%;
     }
     .divider{
       border: 1px solid rgba($color: #000000, $alpha: .1);

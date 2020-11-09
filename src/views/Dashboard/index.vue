@@ -2,7 +2,7 @@
   <div class="about">
     <sloid-layout >
       <template v-slot:menu>
-        <a-menu  theme="dark" style="text-align:left" v-model:selectedKeys="selectedKeys" mode="vertical">
+        <a-menu  theme="light" style="text-align:left" v-model:selectedKeys="selectedKeys" mode="vertical">
           <a-menu-item key="1">
             <pie-chart-outlined />
             <span>Checklist Management</span>

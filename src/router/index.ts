@@ -13,7 +13,7 @@ const routes: RouteRecordRaw[] = [
         path: 'hrissue',
         name: 'hrissue',
         redirect: '/hrissue/employee',
-        component: () => import('../views/HRIssue/index.vue'),
+        component: () => import('../views/HRIssue/index.vue').catch(err => err),
         children: [
           {
             path: 'template',

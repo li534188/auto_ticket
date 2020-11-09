@@ -1,24 +1,45 @@
 <template>
   <basic-layout>
     <template v-slot:header>
-      <div class="logo" />
-      <a-menu
-        theme="dark"
-        class="home-header"
-        mode="horizontal"
-        v-model:selectedKeys="selectedKeys"
-        :style="{ lineHeight: '64px' }"
-      >
-        <a-menu-item key="1">
-          <router-link to="/dashboard">Dashboard</router-link>
-        </a-menu-item>
-        <a-menu-item key="2">
-          <router-link to="/hrissue">HR Issue</router-link>
-        </a-menu-item>
-        <a-menu-item key="3">
-          nav 3
-        </a-menu-item>
-      </a-menu>
+      <div class="header-wrapper">
+        <div class="home-logo" />
+        <!-- <a-menu
+          theme="dark"
+          class="home-header"
+          mode="horizontal"
+          v-model:selectedKeys="selectedKeys"
+          :style="{ lineHeight: '64px' }"
+        >
+          <a-menu-item key="1">
+            <router-link to="/dashboard">Dashboard</router-link>
+          </a-menu-item>
+          <a-menu-item key="2">
+            <router-link to="/hrissue">HR Issue</router-link>
+          </a-menu-item>
+          <a-menu-item key="3">
+            nav 3
+          </a-menu-item>
+        </a-menu> -->
+        <ul class="home-header">
+          <li v-for="(item, index) in headLink" :key="index" >
+            <router-link :class="['link',{'active':index===selectedKey}]" :to="item.link">{{item.title}}</router-link>
+          </li>
+        </ul>
+        <div class="user-logos">
+          <img  class='user-image gutter'  src=''>
+          <a-dropdown placement="bottomRight">
+            <a class="ant-dropdown-link" @click="e => e.preventDefault()">{{userInfo.userName}}<down-outlined class="down-icon" /></a>
+            <template v-slot:overlay>
+              <a-menu>
+                <a-menu-item>
+                  <a href="javascript:;">1st menu item</a>
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </div>
+      </div>
+
     </template>
     <template v-slot:content>
       <router-view />
@@ -34,17 +55,52 @@
 import { Options, Vue, } from 'vue-class-component';
 import BasicLayout from '@/components/layout/BasicLayout.vue';
 import { Watch } from 'vue-property-decorator';
+import { DownOutlined } from '@ant-design/icons-vue';
 // import { reactive, computed, ref, onMounted } from 'vue';
 @Options({
   components: {
-    BasicLayout
+    BasicLayout,
+    DownOutlined
   },
 })
 export default class Home extends Vue {
-  private selectedKeys = ['1']
-  @Watch('selectedKeys')
+  private selectedKey = 0;
+  private userInfo = {
+    userName: 'Claire Sun',
+  }
+  private headLink = [
+    {
+      title: 'Dashboard',
+      link: '/dashboard'
+    }, {
+      title: 'HR Issue',
+      link: '/hrissue'
+    }
+
+  ];
+
+  mounted() {
+    if (this.$route.path) {
+      this.changeSelectedkey(this.$route.path);
+    }
+  }
+  @Watch('selectedKey')
   private onSlectedKeysChange(value: string []) {
     console.log(value[0]);
+  }
+
+
+  @Watch('$route.path')
+  private onRouterChange(value: string) {
+    this.changeSelectedkey(value);
+  }
+
+  private changeSelectedkey(value: string) {
+    this.headLink.map((item, index) => {
+      if (value.indexOf(item.link) > -1) {
+        this.selectedKey = index;
+      }
+    });
   }
 
 }
@@ -159,8 +215,55 @@ export default class Home extends Vue {
 // };
 </script>
 <style lang="scss" scoped>
-  .home-header{
-    text-align: left;
-    margin-left: 15rem;
+  .header-wrapper{
+    display: flex;
+    font-family: HelveticaNeue;
+    font-size: 1rem;
   }
-</style>>
+  .home-logo{
+    width: 120px;
+    height: 31px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 16px 28px 16px 0;
+  }
+  .home-header{
+    flex:1;
+    background: #193442;
+    list-style-type:none;
+    li{
+      display: inline;
+      color: #ffffff;
+      width: 101px;
+      margin-right: 2rem;
+      .link{
+        color: #ffffff;
+        &.active{
+          // text-decoration:underline;
+          border-bottom:1px solid #fff ;
+          font-weight: bold;
+        }
+      }
+    }
+  }
+  .user-logos{
+    display: flex;
+    height: 100%;
+    width: 300px;
+    align-items: center;
+    font-family: HelveticaNeue;
+    color: #ffffff;
+    font-size: 1rem;
+    .user-image{
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+    }
+    .gutter{
+      margin-right: 1rem;
+    }
+  }
+  .down-icon{
+    color: #fff;
+    font-size: 1rem;
+  }
+</style>
