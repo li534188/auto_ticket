@@ -1,5 +1,5 @@
 <template>
-  <div class="about">
+  <div class="jiraChecklist-wrapper">
     <sloid-layout >
       <template v-slot:menu>
         <a-menu  theme="light" style="text-align:left" v-model:selectedKeys="selectedKeys" mode="vertical">
@@ -72,7 +72,7 @@ export default class DashBoard extends Vue {
 // }
 </script>
 <style lang="scss" scoped>
-  .about{
+  .jiraChecklist-wrapper{
     height: 100%;
     width: 100%
   }

@@ -1,5 +1,6 @@
 import { VuexModule, Module, Mutation, Action, getModule } from 'vuex-module-decorators';
-// import { get } from '@/utils/httpUtils'
+import { post } from '@/utils/httpUtils';
+import { LoadingModule } from './loading';
 import store from '@/store';
 
 export enum DeviceType {
@@ -10,7 +11,7 @@ export enum DeviceType {
 
 
 export interface AppState {
-  hrIssueList: HrIssueListType[];
+  hrIssueList: EmployeeInfoType[];
   employeeInfo: EmployeeInfoType;
 }
 
@@ -30,12 +31,14 @@ interface EmployeeInfoType {
   department: string;
   start_date: string;
   manager: string;
+  issue_number: string;
+  template_exist: boolean;
   [key: string]: any;
 }
 
 @Module({ dynamic: true, store, name: 'hrissue' })
 export class HRIssue extends VuexModule implements AppState {
-  public hrIssueList: HrIssueListType[] = [];
+  public hrIssueList: EmployeeInfoType[] = [];
   public employeeInfo: EmployeeInfoType =
     {
       employee_name: '',
@@ -45,23 +48,26 @@ export class HRIssue extends VuexModule implements AppState {
       location: '',
       department: '',
       start_date: '',
-      manager: ''
+      manager: '',
+      issue_number: '',
+      template_exist: false,
     };
 
   @Mutation
-  changeHrIssueList(data: HrIssueListType[]) {
+  changeHrIssueList(data: EmployeeInfoType[]) {
     this.hrIssueList = data;
   }
 
   @Action
-  asyncGetIssueList() {
-    // 用 setTimeout 异步模拟访问 api
-    setTimeout(() => {
-      this.changeHrIssueList([{ name: 'EmployeeA', priority: 'false', time: '11/03/2020', issue_number: 'HR-112' }, { name: 'EmployeeB', priority: 'true', time: '11/03/2020', issue_number: 'HR-113' }]);
-    }, 200);
-    // get('/api/issue').then((data)=>{
-    //   this.changeHrIssueList(data)
-    // })
+  async asyncGetIssueList() {
+    const data: {userName: string; password: string} = { userName: 'jason.yang', password: 'j3Pp4&C0' };
+    LoadingModule.asyncChangeStatus(true);
+    post('/api/pending-issue', data).then(res => {
+      LoadingModule.asyncChangeStatus(false);
+      if (res) {
+        this.changeHrIssueList(res);
+      }
+    });
   }
 
   @Mutation
@@ -70,21 +76,20 @@ export class HRIssue extends VuexModule implements AppState {
   }
 
   @Action
-  asyncGetEmployeeInfo() {
-    this.changeEmployeeInfo({
-      employee_name: 'Claire Sun',
-      preferred_name: 'Claire Sun',
-      job_title: 'Business Analyst',
-      company: 'WONCN - William O’Neil China PVT Limited',
-      location: 'Shanghai, China',
-      department: 'Software Engineering',
-      start_date: '2020.05.13',
-      manager: 'Vincent Wen'
-    });
-    // get('/api//employee-info').then((data)=>{
-    //   this.changeEmployeeInfo(data)
-    // })
+  asyncGetEmployeeInfo(info: EmployeeInfoType) {
+    this.changeEmployeeInfo(info);
   }
+
+  // @Mutation
+  // changeSelectHRIssueNumber(hrIssueNumber: string) {
+  //   this.selectHRIssueNumber = hrIssueNumber;
+  // }
+
+  // @Action
+  // setSelectNumber(number: string) {
+  //   this.changeSelectHRIssueNumber(number);
+  // }
+
 }
 
 export const HRIssueModule = getModule(HRIssue);

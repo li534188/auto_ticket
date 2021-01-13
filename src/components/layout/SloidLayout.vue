@@ -31,16 +31,18 @@ export default class SloidLayout extends Vue {
   height: 100%;
 }
 .sloid-layout {
-  width:18.8rem!important;
+  width:226px!important;
   flex:unset!important;
   max-width: unset!important;
   .ant-layout-sider-trigger {
     bottom: unset;
   }
   background: #ffffff;
-  margin-right: 10px;
+  margin-right: 7px;
+  box-shadow: 0 0 30px 0 rgba(180, 205, 199, 0.4);
 }
 .special-layout{
   background: #ffffff;
+  box-shadow: 0 0 30px 0 rgba(180, 205, 199, 0.4);
 }
 </style>

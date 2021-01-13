@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div class="issue-wrapper">
     <div class="left-content">
       <employee-header />
     </div>
@@ -19,6 +19,7 @@ import { Options, Vue, } from 'vue-class-component';
 import EmployeeHeader from './EmployeeHeader.vue';
 import EmployeeContent from './EmployeeContent.vue';
 import { RedoOutlined, CheckCircleOutlined } from '@ant-design/icons-vue';
+// import { HRIssueModule } from '@/store/modules/hrissue';
 @Options({
   components: {
     RedoOutlined,
@@ -29,58 +30,31 @@ import { RedoOutlined, CheckCircleOutlined } from '@ant-design/icons-vue';
 })
 export default class Employee extends Vue {
   private ridaoValue = '1';
-  private datas: {title: string}[] = [
-    {
-      title: 'Ant Design Title 1',
-    },
-    {
-      title: 'Ant Design Title 2',
-    },
-    {
-      title: 'Ant Design Title 3',
-    },
-    {
-      title: 'Ant Design Title 4',
-    },
-  ];
-  private info: InfoType[] = [
-    {
-      title: 'Name',
-      value: 'Lyt',
-    }, {
-      title: 'Perfered Name',
-      value: 'Job Title',
-    }, {
-      title: 'Company',
-      value: 'Lyt',
-    }, {
-      title: 'Location',
-      value: 'Lyt',
-    }, {
-      title: 'Department',
-      value: 'Lyt',
-    },
-  ]
+  mounted() {
+    // HRIssueModule.asyncGetIssueList();
+  }
 }
 
 </script>
 <style lang="scss" scoped>
-  .wrapper{
+  .issue-wrapper{
     width: 100%;
-    height: 100%;
+    height: 85%;
     padding-top: 1%;
     display: flex;
     flex-direction: row;
+    align-items: flex-start;
     .left-content{
-      flex: 1 1 20%;
+      width: 220px;
+      height: 100%;
     }
     .right-content{
-      flex: 1 1 80%;
+      width: 560px;
     }
     .divider{
       border: 1px solid rgba($color: #000000, $alpha: .1);
       float: left;
-      height: 85%;
+      height: 100%;
     }
   }
 </style>>

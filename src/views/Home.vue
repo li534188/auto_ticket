@@ -1,45 +1,31 @@
 <template>
   <basic-layout>
     <template v-slot:header>
-      <div class="header-wrapper">
-        <div class="home-logo" />
-        <!-- <a-menu
-          theme="dark"
-          class="home-header"
-          mode="horizontal"
-          v-model:selectedKeys="selectedKeys"
-          :style="{ lineHeight: '64px' }"
-        >
-          <a-menu-item key="1">
-            <router-link to="/dashboard">Dashboard</router-link>
-          </a-menu-item>
-          <a-menu-item key="2">
-            <router-link to="/hrissue">HR Issue</router-link>
-          </a-menu-item>
-          <a-menu-item key="3">
-            nav 3
-          </a-menu-item>
-        </a-menu> -->
+      <div class="header-wrapper" >
+        <a class="home-logo" @click="backToHome">
+          <img class="logo-img" src="@/assets/img/DAI_light_green_logo.svg"/>
+        </a>
         <ul class="home-header">
           <li v-for="(item, index) in headLink" :key="index" >
             <router-link :class="['link',{'active':index===selectedKey}]" :to="item.link">{{item.title}}</router-link>
           </li>
         </ul>
         <div class="user-logos">
-          <img  class='user-image gutter'  src=''>
+          <div  class='user-image gutter'>
+            <img  class='user-img'  src='@/assets/img/user.svg'>
+          </div>
           <a-dropdown placement="bottomRight">
-            <a class="ant-dropdown-link" @click="e => e.preventDefault()">{{userInfo.userName}}<down-outlined class="down-icon" /></a>
+            <span @click="e => e.preventDefault()">{{userName}}<down-outlined class="down-icon" /></span>
             <template v-slot:overlay>
               <a-menu>
                 <a-menu-item>
-                  <a href="javascript:;">1st menu item</a>
+                  <a @click="logOut">LogOut</a>
                 </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
         </div>
       </div>
-
     </template>
     <template v-slot:content>
       <router-view />
@@ -56,6 +42,8 @@ import { Options, Vue, } from 'vue-class-component';
 import BasicLayout from '@/components/layout/BasicLayout.vue';
 import { Watch } from 'vue-property-decorator';
 import { DownOutlined } from '@ant-design/icons-vue';
+import { post } from '@/utils/httpUtils';
+import { UserModule } from '@/store/modules/user';
 // import { reactive, computed, ref, onMounted } from 'vue';
 @Options({
   components: {
@@ -65,18 +53,16 @@ import { DownOutlined } from '@ant-design/icons-vue';
 })
 export default class Home extends Vue {
   private selectedKey = 0;
-  private userInfo = {
-    userName: 'Claire Sun',
-  }
+
   private headLink = [
     {
-      title: 'Dashboard',
-      link: '/dashboard'
-    }, {
       title: 'HR Issue',
       link: '/hrissue'
+    },
+    {
+      title: 'Jira Checklist',
+      link: '/dashboard'
     }
-
   ];
 
   mounted() {
@@ -84,11 +70,10 @@ export default class Home extends Vue {
       this.changeSelectedkey(this.$route.path);
     }
   }
-  @Watch('selectedKey')
-  private onSlectedKeysChange(value: string []) {
-    console.log(value[0]);
-  }
 
+  get userName() {
+    return UserModule.userName;
+  }
 
   @Watch('$route.path')
   private onRouterChange(value: string) {
@@ -103,6 +88,22 @@ export default class Home extends Vue {
     });
   }
 
+  private logOut() {
+    post('/api/logout',).then((res) => {
+      if (res.message) {
+        const storage = window.localStorage;
+        storage.removeItem('userName');
+        UserModule.asyncChangeUserName('');
+        this.$router.push({
+          path: '/login',
+        });
+      }
+    });
+  }
+
+  private backToHome() {
+    this.$router.push('/hrissue');
+  }
 }
 // export default  {
 //   components: {
@@ -218,13 +219,25 @@ export default class Home extends Vue {
   .header-wrapper{
     display: flex;
     font-family: HelveticaNeue;
-    font-size: 1rem;
+    font-size: 12px;
+    height: 78px;
+    justify-content: space-around;
+    font-size: 12px;
   }
   .home-logo{
-    width: 120px;
-    height: 31px;
-    background: rgba(255, 255, 255, 0.2);
-    margin: 16px 28px 16px 0;
+    font-family: Futura;
+    cursor: pointer;
+    width: 175px;
+    color: #b3c5c0;
+    display: flex;
+    align-items: center;
+    height: 78px;
+    margin-left: 21px;
+    .logo-img{
+      width: 100%;
+      height: 100%;
+    }
+
   }
   .home-header{
     flex:1;
@@ -234,9 +247,11 @@ export default class Home extends Vue {
       display: inline;
       color: #ffffff;
       width: 101px;
-      margin-right: 2rem;
+      margin-right: 20px;
       .link{
         color: #ffffff;
+        font-size: 14px;
+        letter-spacing: 2.4px;
         &.active{
           // text-decoration:underline;
           border-bottom:1px solid #fff ;
@@ -245,25 +260,33 @@ export default class Home extends Vue {
       }
     }
   }
+
   .user-logos{
     display: flex;
     height: 100%;
-    width: 300px;
+    margin-right: 24px;
     align-items: center;
     font-family: HelveticaNeue;
     color: #ffffff;
-    font-size: 1rem;
+    font-size: 15px;
+    cursor: pointer;
     .user-image{
       width: 2rem;
-      height: 2rem;
+      line-height: 1.5rem;
       border-radius: 50%;
+      overflow: hidden;
+      .user-img{
+        width: 100%
+      }
     }
     .gutter{
-      margin-right: 1rem;
+      margin-right: 6px;
     }
   }
   .down-icon{
     color: #fff;
     font-size: 1rem;
+    margin-left: 6px;
+    margin-top: -10px;
   }
 </style>

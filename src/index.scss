@@ -1,23 +1,108 @@
-$xs: 0;
-$sm: 576px;
-$md: 768px;
-$lg: 992px;
-$xl: 1200px;
-$xxl: 2565px;
 
 html {
-    font-size: 1rem;
-    @media (max-width:$xl){
-        font-size:0.75rem;
-    }
-    @media (min-width:$xl) and (max-width:$xxl) {
-        font-size: 1rem;
-    }
-    @media (min-width:$xxl) {
-        font-size: 1.5rem;
-    }
+    font-size: 12px;
+    font-family: HelveticaNeue;
 }
 @font-face{
     font-family: Zapfino;
-    src:url('~@/assets/font/Zapfino.ttf')
+    src:url('~@/assets/font/Zapfino.ttf') format('truetype')
 }
+@font-face{
+    font-family: Silom;
+    src:url('~@/assets/font/Silom.ttf')
+}
+@font-face{
+    font-family: Futura;
+    src:url('~@/assets/font/Futura-Book-2.ttf')
+}
+@font-face{
+    font-family: HelveticaNeue;
+    src:url('~@/assets/font/Helvetica-Neue-2.ttf');
+}
+
+::-webkit-scrollbar{
+    width: 7px;
+    height:10px;
+    /**/
+  }
+::-webkit-scrollbar-track{
+    background: rgb(239, 239, 239);
+    border-radius:3.5px;
+  }
+::-webkit-scrollbar-thumb{
+    background: #bfbfbf;
+    border-radius:12px;
+  }
+::-webkit-scrollbar-thumb:hover{
+    background: #333;
+  }
+
+  .ant-menu-item-selected{
+    background-color: #f5f7f7 !important;
+    color:#6a778b !important;
+    font-weight: bold ;
+  }
+  .ant-menu-item-active{
+    color:#6a778b ;
+    &:hover{
+      color:#6a778b ;
+      font-weight: bold ;
+    }
+  }
+  .auto-button{
+    border: 1px solid #fa6400!important;
+    color: #fa6400!important;
+    font-size: 9px;
+  }
+  .auto-button-disable{
+    border: 1px solid #C2C8D4;
+    box-sizing: border-box;
+    border-radius: 3px;
+    color: #C2C8D4;
+  }
+
+  $colors:(
+    (title:DAI, color:#ff8c00),
+    (title:ODS, color:#47d040),
+    (title:IBD, color:#8864b8),
+    (title:OCM, color:#fff100),
+    (title:WON, color:#36c2ef),
+    (title:ONS, color:#ED1B24),
+    (title:ONV, color:#db1bed),
+    (title:OGA, color:#F35925),
+    (title:WJO Foundation, color:#2E3192),
+    (title:WONCN, color:#009347),
+    (title:WONSH, color:#0071BD),
+    (title:WONIMSH, color:#600E8A),
+    (title:WON India, color:#CF0072),
+  );
+  @each $c in $colors{
+      .company-color.#{map-get($c, title)}::before{
+          border-color:map-get($c, color);
+      }
+  }
+  .company-color::before{
+      border-width: 2.5px;
+      border-style: solid;
+      width: 10px;
+      height: 10px;
+      content:'';
+      display: inline-block;
+      border-radius: 50%;
+      margin-right:5px;
+  }
+  .input-wrapper{
+    .ant-select-selection-selected-value{
+      line-height: 12px;
+    }
+  }
+
+  .special-box .ant-checkbox{
+    transform: scale(0.8);
+  }
+  
+  .special-box .ant-checkbox-wrapper{
+    font-size: 12px!important;
+  }
+  
+

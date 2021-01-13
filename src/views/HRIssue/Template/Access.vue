@@ -1,94 +1,88 @@
 <template>
-  <a-form :model="form" :label-col="labelCol" :wrapper-col="wrapperCol">
-    <a-form-item >
-      <a-radio-group style="width:100%" v-model:value="form.resource">
-        <a-radio style="margin-right:3rem" v-for="(item,index) in  radioData" :key="index" :value="item">
-          {{item}}
-        </a-radio>
-      </a-radio-group>
-    </a-form-item>
-    <div v-for="(item,index) in  checkData" :key="index" >
-      <a-row>
-        <a-col :span="24">
-          <h3>
-            {{item.title}}
-          </h3>
-        </a-col>
-      </a-row>
-      <a-row>
-        <a-checkbox-group style="width:100%" v-model:value="form.type">
-          <a-col :span="6" v-for="(subItem) in  item.data" :key="subItem" >
-            <a-checkbox  :value="subItem">
-              {{subItem}}
+  <a-form :label-col="labelCol" :wrapper-col="wrapperCol">
+    <div>
+      <a-checkbox-group class="special-box" :disabled="!allowEdit" style="width:100%" v-model:value="selectAccess">
+        <a-row class="list-style">
+          <a-col class="item-style" span="6" v-for="(value, key,) in checkData" :key="key" >
+            <a-checkbox  :value="value" >
+              {{key}}
             </a-checkbox>
           </a-col>
-        </a-checkbox-group>
-      </a-row>
+        </a-row>
+      </a-checkbox-group>
     </div>
   </a-form>
 </template>
-<script>
-export default {
-  data() {
-    return {
-      labelCol: { span: 4 },
-      wrapperCol: { span: 14 },
-      form: {
-        name: '',
-        region: undefined,
-        date1: undefined,
-        delivery: false,
-        type: [],
-        resource: '',
-        desc: '',
-      },
-      radioData: [
-        'Print',
-        'Bindery',
-        'Fulfillment/HW',
-        'Leadership',
-        'Shipping/Receiving'
-      ],
-      checkData: [
-        {
-          title: 'Policies',
-          data: [
-            'test1', 'test2', 'test3', 'test4', 'test5',
-          ]
-        }, {
-          title: 'Other Documents',
-          data: [
-            'item6', 'item7', 'item8', 'item9', 'item10',
-          ]
-        }, {
-          title: 'Work Instructions',
-          data: [
-            'item11', 'item12', 'item13', 'item14', 'item15',
-          ]
-        },
-      ]
-    };
-  },
-  methods: {
-    onSubmit() {
-      console.log('submit!', this.form);
-    },
-  },
-  watch: {
-    'form.type': {
-      handler(val) {
-        console.log('console.log(val)');
-        console.log(val);
-      },
-      deep: true,
-    },
-    'form.resource'(val) {
-      console.log(val);
+<script lang="ts">
+import { Vue } from 'vue-class-component';
+import { Prop, Watch } from 'vue-property-decorator';
+import { getAccessList } from '@/utils/server';
+export default class Access extends Vue {
+  @Prop() private accessValue!: string[];
+  @Prop() private exitAcess!: string[];
+  @Prop() private allowEdit!: boolean;
+  @Prop() private templateModel!: string;
+
+
+  private labelCol = { span: 4 };
+  private wrapperCol =  { span: 14 };
+  private selectAccess: string [] = [];
+  private form = {
+    name: '',
+    region: undefined,
+    date1: undefined,
+    delivery: false,
+    type: ['item16', 'item17'],
+    resource: '',
+    desc: '',
+  };
+  private radioData = [
+    'Print',
+    'Bindery',
+    'Fulfillment/HW',
+    'Leadership',
+    'Shipping/Receiving'
+  ];
+  private checkData = [];
+  private formateItem(item: string) {
+    const res = item.replace(/_/g, ' ');
+    return res;
+  }
+
+  mounted() {
+    const res = getAccessList();
+    res.then(data => {
+      this.checkData = data;
+    });
+  }
+
+  @Watch('selectAccess')
+  private onItemChange(value: string[]) {
+    this.$emit('update:accessValue', value);
+  }
+
+  @Watch('allowEdit')
+  private allowEditChange(value: string) {
+    if (!value && this.templateModel!=='create') {
+      this.selectAccess = this.exitAcess;
     }
   }
 
-};
-</script>
-<style>
 
+  @Watch('exitAcess', { immediate: true })
+  private exitAcessChange(val: string[]) {
+    this.selectAccess = val;
+  }
+
+}
+</script>
+<style lang="scss" scoped>
+  .list-style{
+    line-height: 2.5rem;
+    .item-style{
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
 </style>

@@ -1,8 +1,7 @@
 import axios from 'axios';
-// import { Message } from 'element-ui';
 import router from '../router';
-
-axios.defaults.timeout = 5000;
+import { message } from 'ant-design-vue';
+axios.defaults.timeout = 6000000;
 axios.defaults.baseURL = '';
 
 
@@ -10,13 +9,8 @@ axios.defaults.baseURL = '';
 axios.interceptors.request.use(
   config => {
     // const token = getCookie('名称');注意使用的时候需要引入cookie方法，推荐js-cookie
+    config.headers['Content-Type'] = 'application/json';
     config.data = JSON.stringify(config.data);
-    config.headers = {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    };
-    // if(token){
-    //   config.params = {'token':token}
-    // }
     return config;
   },
   error => {
@@ -28,18 +22,25 @@ axios.interceptors.request.use(
 // http response 拦截器
 axios.interceptors.response.use(
   response => {
-    if (response.data.errCode === 2) {
-      router.push({
-        path: '/login',
-        // query:{redirect:router.currentRoute.fullPath}//从哪个页面跳转
-      });
-    }
+
     return response;
   },
   error => {
-    return Promise.reject(error);
-  }
-);
+    if (error.response) {
+      switch (error.response.status) {
+      case 401:
+        router.push({
+          path: '/login',
+        });
+        break;
+      default:
+        message.error('Serve Error');
+        return Promise.reject(error);
+      }
+    } else {
+      message.error('Request Timeout');
+    }
+  });
 
 
 /**
@@ -49,9 +50,9 @@ axios.interceptors.response.use(
  * @returns {Promise}
  */
 
-export async function get(url: string, params = {}) {
+export async function get(url: string, data = {}) {
   try {
-    const res = await axios.get(url, { params });
+    const res = await axios.get(url, { params: data });
     return res.data;
   } catch (err) {
     console.log(err);
@@ -70,7 +71,6 @@ export async function post(url: string, data = {}) {
   try {
     const res = await axios.post(url, data);
     if (res.status === 200) {
-      console.log(res);
       return res.data;
     }
   } catch (err) {

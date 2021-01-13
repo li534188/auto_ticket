@@ -1,12 +1,8 @@
 <template>
-  <div class="wrapper">
+  <div @keydown="enter($event)" class="wrapper">
     <div class="logo">
-      <div class="logo-noc">
-        noc
-      </div>
-      <div class="logo-tick">
-        Ticketing
-      </div>
+      <div class="logo-noc">NOC</div>
+      <div class="logo-tick">Ticket</div>
     </div>
     <!-- <canvas
       style="border: aqua solid 1px"
@@ -17,11 +13,14 @@
     <div class="from-model">
       <div class="from-header">Log in with your DAI account:</div>
       <a-form :model="form" :label-col="labelCol" :wrapper-col="wrapperCol">
-        <a-input class="login-input" v-model:value="form.userName" />
+        <span v-show="showError.status" class="error-info">{{showError.info}}</span>
+        <a-input style="color:#fff" class="login-input" v-model:value="form.userName" placeholder="DAI account" />
         <a-input
           class="login-input"
+          style="color:#fff"
           type="password"
           v-model:value="form.passWord"
+          placeholder="Password"
         />
         <a-button
           class="login-input login-button"
@@ -37,6 +36,8 @@
 import { Options, Vue } from 'vue-class-component';
 import BasicLayout from '@/components/layout/BasicLayout.vue';
 import { post } from '@/utils/httpUtils';
+import { LoadingModule } from '@/store/modules/loading';
+import { UserModule } from '@/store/modules/user';
 
 @Options({
   components: {
@@ -49,28 +50,60 @@ export default class User extends Vue {
     passWord: '',
   };
 
+  private showError = {
+    status: false,
+    info: '',
+    time: 1500,
+  }
+
+
   private submit() {
-    console.log(this.form);
-    post('/api/login', this.form).then((res) => {
-      console.log(res);
+    if (!this.form.userName) {
+      this.setErrorInfo('username required');
+      return;
+    }
+
+    if (!this.form.passWord) {
+      this.setErrorInfo('password required');
+      return;
+    }
+
+    if (!this.form.passWord) {
+      this.showError.status = true;
+      setTimeout(() => {
+        this.showError.status = false;
+      }, this.showError.time);
+      return;
+    }
+
+    const data: {userName: string; password: string} = { userName: this.form.userName, password: this.form.passWord };
+    LoadingModule.asyncChangeStatus(true);
+    post('/api/login', data).then((res) => {
+      LoadingModule.asyncChangeStatus(false);
+      if (res.mseeage==='Success') {
+        this.$router.push('/hrissue');
+        UserModule.asyncChangeUserName(res.username);
+      } else {
+        this.setErrorInfo('Wrong username or password');
+      }
+
     });
   }
 
-  mounted() {
-    console.log(123);
-    // const obj: HTMLCanvasElement = document.querySelector('#canvas') as HTMLCanvasElement;
-    // if (obj) {
-    //   const context: CanvasRenderingContext2D = obj.getContext('2d') as CanvasRenderingContext2D;
-    //   if (context) {
-    //     context.font = 'italic 30pt Finger Paint';
-    //     context.fillStyle = '#cce1fb';
-    //     context.strokeStyle = '#ffff';
-    //     context.strokeText('NOC', 100, 100);
-    //     context.fillText('NOC', 100, 100);
-    //     // context.strokeText('hellocav', 100, 100);
-    //   }
-    // }
+  private setErrorInfo(value: string) {
+    this.showError.status = true;
+    this.showError.info = value;
+    setTimeout(() => {
+      this.showError.status = false;
+    }, this.showError.time);
+    return;
   }
+
+  private enter(e: KeyboardEvent) {
+    if (e.keyCode === 13)
+      this.submit();
+  }
+
 }
 </script>
 <style lang="scss" scoped>
@@ -81,34 +114,46 @@ export default class User extends Vue {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   font-family: LucidaGrande;
   font-size: 1rem;
   .logo {
-    margin-top: 8%;
-    width:  23rem;
+    margin-top: 20%;
+    margin-bottom: 53px;
+    width: 274px;
     color: #fff;
-    font-family: 'Zapfino';
-    padding: 0 5rem;
-    .logo-noc{
+    padding: 0 60px;
+    position: relative;
+    .logo-noc {
       text-align: left;
-      font-size: 3rem;
-      font-weight: 300;
+      position: absolute;
+      font-size: 28px;
+      font-family: "Zapfino";
     }
-    .logo-tick{
+    .logo-tick {
+      margin-top: 2px;
       text-align: right;
-      font-family: Silom;
-      font-size: 2rem;
+      font-size: 21px;
+      font-weight: 700;
+      font-stretch: narrower;
     }
   }
   .from-model {
-    width: 23rem;
-    margin-top: 30px;
+    width: 274px;
     height: 220px;
     border-radius: 5px;
     font-weight: 700;
     .login-input {
       margin-top: 20px;
-      border-radius: 5px;
+      border-radius: 2px;
+      border: solid 1px rgba(255, 252, 252, 0.45);
+      background-color: rgba(255, 255, 255, 0.18);
+    }
+    .error-info{
+      font-size: 0.8rem;
+      color: rgb(247, 83, 83);
+      display: block;
+      margin-top: 0.2rem;
     }
     .login-button {
       width: 100%;
@@ -122,9 +167,9 @@ export default class User extends Vue {
       font-stretch: normal;
       font-style: normal;
       line-height: 1.19;
-      letter-spacing: 0.24px;
       text-align: center;
       color: #dddddd;
+      font-size: 18px;
     }
   }
 }

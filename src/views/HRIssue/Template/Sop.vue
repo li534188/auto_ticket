@@ -1,160 +1,183 @@
 <template>
-  <a-form :model="form" :label-col="labelCol" :wrapper-col="wrapperCol">
+  <a-form>
     <a-form-item >
-      <a-radio-group style="width:100%" v-model:value="form.resource">
-        <a-radio style="margin-right:3rem" v-for="(item,index) in  radioData" :key="index" :value="item">
-          {{item}}
-        </a-radio>
-      </a-radio-group>
-    </a-form-item>
-    <div v-for="(item,index) in  checkData" :key="index" >
-      <a-row>
-        <a-col :span="24">
-          <h3>
-            {{item.title}}
-          </h3>
-        </a-col>
-      </a-row>
-      <a-row>
-        <a-checkbox-group style="width:100%" v-model:value="form.type">
-          <a-col :span="6" v-for="(subItem) in  item.data" :key="subItem" >
-            <a-checkbox  :value="subItem">
-              {{subItem}}
-            </a-checkbox>
-          </a-col>
-        </a-checkbox-group>
-      </a-row>
-    </div>
-
-    <!-- <a-form-item label="Activity name">
-      <a-input v-model:value="form.name" />
-    </a-form-item>
-    <a-form-item label="Activity zone">
-      <a-select v-model:value="form.region" placeholder="please select your zone">
-        <a-select-option value="shanghai">
-          Zone one
-        </a-select-option>
-        <a-select-option value="beijing">
-          Zone two
-        </a-select-option>
-      </a-select>
-    </a-form-item>
-    <a-form-item label="Activity time">
-      <a-date-picker
-        v-model:value="form.date1"
-        show-time
-        type="date"
-        placeholder="Pick a date"
-        style="width: 100%;"
-      />
-    </a-form-item>
-    <a-form-item label="Instant delivery">
-      <a-switch v-model:checked="form.delivery" />
-    </a-form-item>
-    <a-form-item label="Activity type">
-      <a-checkbox-group v-model:value="form.type">
-        <a-checkbox value="1" name="type">
-          Online
-        </a-checkbox>
-        <a-checkbox value="2" name="type">
-          Promotion
-        </a-checkbox>
-        <a-checkbox value="3" name="type">
-          Offline
+      <a-checkbox-group class="special-box" :disabled="!allowEdit" style="width:100%" v-model:value="selectRadio">
+        <a-checkbox v-for="(item, key) in  radioData"  :key="key" :value="item" >
+          {{formateLabel(item)}}
         </a-checkbox>
       </a-checkbox-group>
     </a-form-item>
-
-    <a-form-item label="Activity form">
-      <a-input v-model:value="form.desc" type="textarea" />
-    </a-form-item>
-    <a-form-item :wrapper-col="{ span: 14, offset: 4 }">
-      <a-button type="primary" @click="onSubmit">
-        Create
-      </a-button>
-      <a-button style="margin-left: 10px;">
-        Cancel
-      </a-button>
-    </a-form-item> -->
+    <a-checkbox-group class="special-box" style="width:100%" :disabled="!allowEdit" v-model:value="form">
+      <div v-for="(item, key) in  selectDatas" :key="key" class="sop-phase" >
+        <a-row >
+          <a-col :span="24">
+            <div class="phase-title">
+              {{key}}
+            </div>
+          </a-col>
+        </a-row >
+        <a-row class="list-style">
+          <a-col class="item-style" :title="key" :span="8" v-for="(subItem, key) in  item" :key="key" >
+            <a-checkbox :value="subItem">
+              {{key}}
+            </a-checkbox>
+          </a-col>
+        </a-row>
+      </div>
+    </a-checkbox-group>
   </a-form>
 </template>
-<script>
-export default {
-  mounted() {
-    console.log(99999);
-    const obj = new Proxy({}, {
-      get(target, propKey, receiver) {
-        console.log(`getting ${propKey}!`);
-        return Reflect.get(target, propKey, receiver);
-      },
-      set(target, propKey, value, receiver) {
-        console.log(`setting ${propKey}!`);
-        return Reflect.set(target, propKey, value, receiver);
+<script lang="ts">
+import { Vue } from 'vue-class-component';
+import { Watch, Prop } from 'vue-property-decorator';
+export default class Sop extends Vue {
+
+  @Prop({ required: true }) private sopValue!: any;
+  @Prop({ required: true }) private phase!: string;
+  @Prop({ required: true }) private templateModel!: string;
+  @Prop({ required: true }) private exitSop!: string[];
+  @Prop({ required: true }) private exitPhase!: string[];
+  @Prop({ required: true }) private sopDefaultSelect!: {[key: string]: string[]};
+  @Prop() private allowEdit!: boolean;
+  @Prop({ required: true }) private allData!: any;
+  private radioData = [
+    'Print',
+    'Bindery',
+    'Fulfillment_HW',
+    'Leadership',
+    'Shipping_Receiving',
+  ];
+
+  private sopStructure: any = {
+    Policies: ['No Touch Policy', 'One Touch Policy', 'Peer to Peer Policy'],
+    'Work Instructions': ['Tap Test Procedure', 'Centene Hand Bind Quality Assurance', 'Production Schedules', 'Automated Daily Shift Log'],
+    'Other Documents': ['Poor Quality of Centene NCR Form', 'NAV Customer Inventory Guidelines'],
+  }
+
+  private selectRadio: string[] = [];
+
+  private form: any[] = [];
+
+  private formateItem(item: string) {
+    const res = item.replace(/_/g, ' ');
+    return res;
+  }
+
+  private formateLabel(item: string) {
+    const res = item.replace(/_/g, '/');
+    return res;
+  }
+
+
+  get selectDatas() {
+    const data = this.allData;
+    // {sop:{sop1:123,sop2:456}}
+    const newData: {[key: string]: {[key: string]: string}} = { 'Policies': {}, 'Other Documents': {}, 'Work Instructions': {}, sop: {}};
+    let sopFlag = true;
+    for (const element in data) {
+      sopFlag = true;
+      for (const key in this.sopStructure) {
+        for (let i = 0; i< this.sopStructure[key].length; i++) {
+          if (this.sopStructure[key][i].toLowerCase() === element.toLowerCase()) {
+            newData[key][element] = data[element];
+            sopFlag = false;
+            break;
+          }
+        }
+        if (!sopFlag) {
+          break;
+        }
       }
-    });
-    obj.count = 1;
-    ++obj.count;
-  },
-  data() {
-    return {
-      labelCol: { span: 4 },
-      wrapperCol: { span: 14 },
-      form: {
-        name: '',
-        region: undefined,
-        date1: undefined,
-        delivery: false,
-        type: [],
-        resource: '',
-        desc: '',
-      },
-      radioData: [
-        'Print',
-        'Bindery',
-        'Fulfillment/HW',
-        'Leadership',
-        'Shipping/Receiving'
-      ],
-      checkData: [
-        {
-          title: 'Policies',
-          data: [
-            'item1', 'item2', 'item3', 'item4', 'item5',
-          ]
-        }, {
-          title: 'Other Documents',
-          data: [
-            'item6', 'item7', 'item8', 'item9', 'item10',
-          ]
-        }, {
-          title: 'Work Instructions',
-          data: [
-            'item11', 'item12', 'item13', 'item14', 'item15',
-          ]
-        },
-      ]
-    };
-  },
-  methods: {
-    onSubmit() {
-      console.log('submit!', this.form);
-    },
-  },
-  watch: {
-    'form.type': {
-      handler(val) {
-        console.log('console.log(val)');
-        console.log(val);
-      },
-      deep: true,
-    },
-    'form.resource'(val) {
-      console.log(val);
+      if (sopFlag) {
+        newData.sop[element] =  data[element];
+      }
+    }
+    return newData;
+  }
+  // data&&data.forEach((element: string) => {
+  //   sopFlag = true;
+  //   for (const key in this.sopStructure) {
+  //     for (let i = 0; i< this.sopStructure[key].length; i++) {
+  //       if (this.sopStructure[key][i].toLowerCase() === element) {
+  //         newData[key].push(element);
+  //         sopFlag = false;
+  //         break;
+  //       }
+  //     }
+  //     if (!sopFlag) {
+  //       break;
+  //     }
+  //   }
+  //   if (sopFlag) {
+  //     newData.sop.push(element);
+  //   }
+  // });
+  // return newData;
+
+  @Watch('selectRadio', { immediate: true })
+  private onRadioChange(value: string[]) {
+    const { sopDefaultSelect, templateModel } = this;
+    let arr: string[] = [];
+    if (templateModel==='create') {
+      if (Array.isArray(value)&&value.length > 0) {
+        value.map(item => {
+          arr = arr.concat(sopDefaultSelect[item]);
+        });
+      }
+      const newarr = arr.filter((item, index, arr) => {
+        return arr.indexOf(item, 0) === index;
+      });
+      this.form = newarr;
+    }
+    this.$emit('update:phase', value);
+  }
+
+  @Watch('form')
+  private onitemChange() {
+    const { selectRadio, form } = this;
+    console.log(form);
+    this.$emit('update:sopValue', selectRadio?form:[]);
+  }
+
+  @Watch('allowEdit')
+  private allowEditChange(value: string) {
+    if (!value&&this.templateModel!=='create') {
+      this.form = this.exitSop;
+      this.selectRadio = this.exitPhase;
     }
   }
 
-};
-</script>
-<style>
+  @Watch('exitSop', { deep: true, immediate: true })
+  private exitSopChange(value: string[]) {
+    this.form = value;
+  }
 
+  @Watch('exitPhase',  { immediate: true })
+  private exitPhaseChange(value: string[]) {
+    console.log(value);
+    this.selectRadio = value;
+  }
+
+}
+</script>
+<style lang="scss" scoped>
+  .list-style{
+    line-height: 2.5rem;
+    .item-style{
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+  }
+  .ant-radio-wrapper{
+    font-size: 12px!important;
+  }
+  .phase-title{
+    font-family: HelveticaNeue;
+    font-size: 13px;
+    color: #3B4859;
+  }
+  .sop-phase{
+    margin-bottom: 20px;
+  }
 </style>

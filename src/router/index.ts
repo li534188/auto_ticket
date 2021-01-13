@@ -1,6 +1,7 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
+import { createRouter, createWebHistory, RouteRecordRaw, } from 'vue-router';
 import Home from '../views/Home.vue';
 import User from '../views/User.vue';
+import Error from '../views/Error.vue';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -19,6 +20,18 @@ const routes: RouteRecordRaw[] = [
             path: 'template',
             name: 'Template',
             component: () => import('../views/HRIssue/Template/index.vue'),
+            redirect: '/hrissue/template/list',
+            children: [
+              {
+                path: 'list',
+                name: 'TemplateList',
+                component: () => import('../views/HRIssue/Template/List.vue'),
+              }, {
+                path: 'detail/:type',
+                name: 'TemplateDetail',
+                component: () => import('../views/HRIssue/Template/NewTemplate.vue'),
+              },
+            ]
           }, {
             path: 'employee',
             name: 'Employee',
@@ -35,6 +48,10 @@ const routes: RouteRecordRaw[] = [
     path: '/login',
     name: 'Login',
     component: User,
+  }, {
+    path: '/:pathMatch(.*)',
+    name: 'error',
+    component: Error,
   }
 ];
 

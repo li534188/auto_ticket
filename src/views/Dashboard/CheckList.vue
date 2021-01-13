@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div class="list-wrapper">
     <div class="header">
       <a-row >
         <a-input class="search-input" v-model:value="searchValue" />
@@ -236,9 +236,10 @@ export default class CheckList extends Vue {
 // }
 </script>
 <style lang="scss" scoped>
-  .wrapper{
+  .list-wrapper{
     padding: 0 50px;
     line-height: 50px;
+
       .label{
         text-align: right;
       }
