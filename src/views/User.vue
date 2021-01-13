@@ -35,7 +35,7 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import BasicLayout from '@/components/layout/BasicLayout.vue';
-import { post } from '@/utils/httpUtils';
+import { getUser } from '@/utils/server';
 import { LoadingModule } from '@/store/modules/loading';
 import { UserModule } from '@/store/modules/user';
 
@@ -78,7 +78,7 @@ export default class User extends Vue {
 
     const data: {userName: string; password: string} = { userName: this.form.userName, password: this.form.passWord };
     LoadingModule.asyncChangeStatus(true);
-    post('/api/login', data).then((res) => {
+    getUser(data).then((res) => {
       LoadingModule.asyncChangeStatus(false);
       if (res.mseeage==='Success') {
         this.$router.push('/hrissue');
