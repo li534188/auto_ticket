@@ -110,8 +110,3 @@ export async function syncTemplate(data: { jobTitle: string; manager: string; so
   return res;
 }
 
-export async function getUser(data: { userName: string; password: string }) {
-  const res = await post('/api/login', data);
-  return res;
-}
-

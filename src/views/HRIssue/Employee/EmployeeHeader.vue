@@ -3,7 +3,7 @@
     <header>
       <div class="sloid-title">
         <span style="margin-right:10px">Pending HR Issue</span>
-        <redo-outlined @click="reloadData" class="go" :style="{transform:'rotateZ('+deg*360+'deg)'}" />
+        <redo-outlined @click="reloadData" data-test="reloadButton" class="go" :style="{transform:'rotateZ('+deg*360+'deg)'}" />
       </div>
       <div class="sloid-divider"/>
     </header>
@@ -39,9 +39,15 @@ import { Watch } from 'vue-property-decorator';
 })
 export default class EmployeeHeader extends Vue {
 
-  private activeKey = '0';
+  private activeKey!: string;
 
   private deg = 0;
+
+  data() {
+    return {
+      activeKey: '0'
+    };
+  }
 
   mounted() {
     const { employeeInfo, } = HRIssueModule;
@@ -49,13 +55,13 @@ export default class EmployeeHeader extends Vue {
   }
 
   private changeHrissueNumber(issueNumber: string) {
+    console.log('fffffffff');
     this.activeKey = issueNumber;
   }
 
   private reloadData() {
     HRIssueModule.asyncGetIssueList();
     this.deg++;
-
   }
 
   get hrIssueList() {

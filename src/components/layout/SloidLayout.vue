@@ -42,6 +42,7 @@ export default class SloidLayout extends Vue {
   box-shadow: 0 0 30px 0 rgba(180, 205, 199, 0.4);
 }
 .special-layout{
+  flex:1;
   background: #ffffff;
   box-shadow: 0 0 30px 0 rgba(180, 205, 199, 0.4);
 }

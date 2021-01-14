@@ -37,6 +37,7 @@ export default class BasicLayout extends Vue {
         background: #fff;
         height:100%;
         position: absolute;
+        width: 100%;
       }
     }
 }

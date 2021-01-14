@@ -29,10 +29,6 @@ import { RedoOutlined, CheckCircleOutlined } from '@ant-design/icons-vue';
   },
 })
 export default class Employee extends Vue {
-  private ridaoValue = '1';
-  mounted() {
-    // HRIssueModule.asyncGetIssueList();
-  }
 }
 
 </script>

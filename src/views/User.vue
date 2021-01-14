@@ -12,7 +12,7 @@
     ></canvas> -->
     <div class="from-model">
       <div class="from-header">Log in with your DAI account:</div>
-      <a-form :model="form" :label-col="labelCol" :wrapper-col="wrapperCol">
+      <a-form :model="form">
         <span v-show="showError.status" class="error-info">{{showError.info}}</span>
         <a-input style="color:#fff" class="login-input" v-model:value="form.userName" placeholder="DAI account" />
         <a-input
@@ -35,7 +35,7 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import BasicLayout from '@/components/layout/BasicLayout.vue';
-import { getUser } from '@/utils/server';
+import { post } from '@/utils/httpUtils';
 import { LoadingModule } from '@/store/modules/loading';
 import { UserModule } from '@/store/modules/user';
 
@@ -45,10 +45,20 @@ import { UserModule } from '@/store/modules/user';
   },
 })
 export default class User extends Vue {
-  private form: { userName: string; passWord: string } = {
-    userName: '',
-    passWord: '',
-  };
+
+  data() {
+    return {
+      test: 456,
+      from: {
+        userName: '',
+        passWord: '',
+      }
+    };
+  }
+
+  // data define type
+  private test!: number;
+  private form!: { userName: string; passWord: string };
 
   private showError = {
     status: false,
@@ -58,6 +68,7 @@ export default class User extends Vue {
 
 
   private submit() {
+    console.log(this.form);
     if (!this.form.userName) {
       this.setErrorInfo('username required');
       return;
@@ -68,17 +79,10 @@ export default class User extends Vue {
       return;
     }
 
-    if (!this.form.passWord) {
-      this.showError.status = true;
-      setTimeout(() => {
-        this.showError.status = false;
-      }, this.showError.time);
-      return;
-    }
 
     const data: {userName: string; password: string} = { userName: this.form.userName, password: this.form.passWord };
     LoadingModule.asyncChangeStatus(true);
-    getUser(data).then((res) => {
+    post('/api/login', data).then((res) => {
       LoadingModule.asyncChangeStatus(false);
       if (res.mseeage==='Success') {
         this.$router.push('/hrissue');

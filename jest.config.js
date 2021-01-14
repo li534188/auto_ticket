@@ -38,5 +38,9 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   moduleFileExtensions: ['vue', 'js', 'json', 'jsx', 'ts', 'tsx', 'node'],
-  transformIgnorePatterns: ['<rootDir>/node_modules/(?!lodash-es)']
+  transformIgnorePatterns: ['<rootDir>/node_modules/(?!lodash-es)'],
+  collectCoverage: true,
+  collectCoverageFrom: [
+    'src/**/**/EmployeeHeader.vue', '!src/components/*.vue'
+  ],
 };
