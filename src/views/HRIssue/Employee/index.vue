@@ -35,17 +35,17 @@ export default class Employee extends Vue {
 <style lang="scss" scoped>
   .issue-wrapper{
     width: 100%;
-    height: 85%;
+    height: 95%;
     padding-top: 1%;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     .left-content{
-      width: 220px;
+      width: 290px;
       height: 100%;
     }
     .right-content{
-      width: 560px;
+      width: 800px;
     }
     .divider{
       border: 1px solid rgba($color: #000000, $alpha: .1);

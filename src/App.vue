@@ -45,12 +45,11 @@ export default class App extends Vue {
     align-items: center;
     justify-content: center;
     flex-direction: row;
-    min-height: 900px;
     height: 100vh;
   }
   .wrapper-item{
     width: 1024px;
-    height: 900px;
+    height: 100vh;
     position: relative;
   }
 

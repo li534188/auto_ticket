@@ -37,6 +37,8 @@
               :modalData="sonData.Access"
               :selectChangeMethod="changeSelectIds"
               :selectData="selectData.Access"
+              :secondaryCreation="secondaryCreation"
+              :complateData="complateAccessData"
             />
             <EmployeeModalTab
               type="SOP"
@@ -44,6 +46,8 @@
               :modalData="sonData.SOP"
               :selectChangeMethod="changeSelectIds"
               :selectData="selectData.SOP"
+              :secondaryCreation="secondaryCreation"
+              :complateData="complateSopData"
             />
             <div v-if="popStatus" class="pop-mask">
               <div  class="wrapper-son">
@@ -71,10 +75,10 @@
     </template>
     <template v-slot:footer>
       <div class="footer-wrapper">
-        <div v-if="showFooterCheked">
+        <div v-if="showFooterCheked&&!secondaryCreation">
           <a-checkbox class="special-tab footer-checkbox special-box"  v-model:checked="footerCheked">{{`Also sync the changes to the template "${hrInfo&&hrInfo['Job Title']}"`}}</a-checkbox>
         </div>
-        <a-button @click="confirm" class="special-button">Start Auto-Create</a-button>
+        <a-button @click="confirm" :disabled="showLoading" class="special-button">Start Auto-Create</a-button>
       </div>
     </template>
   </ModalAuto>
@@ -95,6 +99,7 @@ import EmployeeModalTab, { ModalType } from './EmployeeModalTab.vue';
 import { getTicketInfo, getListExtra, } from '@/utils/server';
 import ModalAuto from '@/components/ModalAuto.vue';
 import { Prop, Watch } from 'vue-property-decorator';
+import { ComplateJiraInfoTypeArr } from './EmployeeContent.vue';
 @Options({
   components: {
     RedoOutlined,
@@ -108,9 +113,17 @@ import { Prop, Watch } from 'vue-property-decorator';
 export default class EmployeeModal extends Vue {
     @Prop({ require: true }) private show!: boolean;
     @Prop({ require: true }) private changeShow!: {(even: boolean): void};
-    @Prop({ require: true }) private hrInfo!: {Company: string; 'Perfered Name': string; 'Job Title': string; Manager: string};
+    @Prop({ require: true }) private hrInfo!: {Company: string; 'Perfered Name': string; 'Job Title': string; Manager: string;Name: string};
     @Prop({ require: true }) private confirCallback!: {(param: {access: string[]; sop: string[]; footerCheck: boolean}): void};
-    private activeKey = '1';
+    @Prop({ retuqire: true }) private secondaryCreation!: boolean;
+    @Prop({ retuqire: true }) private complateSopData!: ComplateJiraInfoTypeArr;
+    @Prop({ retuqire: true }) private complateAccessData!: ComplateJiraInfoTypeArr;
+    data() {
+      return {
+        sonData: { SOP: [], Access: []},
+        popStatus: false,
+      };
+    }
     private SOPSelectIds: string[] = [];
     private AccessSelectIds: string[]  = [];
     private showLoading = false;
@@ -119,7 +132,7 @@ export default class EmployeeModal extends Vue {
     private footerCheked = false;
     private showFooterCheked = false;
     private ticketText = ''
-    private popStatus = false;
+    private popStatus!: boolean;
 
     private confirm() {
       this.sonData={ SOP: [], Access: []};
@@ -135,13 +148,21 @@ export default class EmployeeModal extends Vue {
         this.AccessSelectIds = value;
       }
       let flag = true;
-      if (value.length !== this.sonData[type].length) {
+      if (this.SOPSelectIds.length !== this.sonData[ModalType.SOP].length || this.AccessSelectIds.length !== this.sonData[ModalType.Access].length) {
         flag = false;
       }
       if (flag) {
         try {
-          value.forEach((item: string) => {
-            flag = this.sonData[type].some((element: ModalDataObj) => {
+          this.SOPSelectIds.forEach((item: string) => {
+            flag = this.sonData[ModalType.SOP].some((element: ModalDataObj) => {
+              return item === element.RealTask;
+            });
+            if (!flag) {
+              throw new Error('ending');
+            }
+          });
+          this.AccessSelectIds.forEach((item: string) => {
+            flag = this.sonData[ModalType.Access].some((element: ModalDataObj) => {
               return item === element.RealTask;
             });
             if (!flag) {
@@ -167,22 +188,20 @@ export default class EmployeeModal extends Vue {
     }
 
     @Watch('show')
-    private showPop(val: boolean) {
+    private async showPop(val: boolean) {
       if (val) {
-        if (this.hrInfo['Job Title']&&this.hrInfo['Perfered Name']) {
+        if (this.hrInfo['Job Title']&&this.hrInfo.Name) {
           this.showLoading = true;
-          getTicketInfo({ company: this.hrInfo.Company, preferredName: this.hrInfo['Perfered Name'], jobTitle: this.hrInfo['Job Title'], manager: this.hrInfo.Manager }).then(res => {
-            this.showLoading = false;
-            if (res) {
-              this.sonData = res;
-            }
-
-          });
-          getListExtra({ preferredName: this.hrInfo['Perfered Name'], company: this.hrInfo.Company }).then(res => {
-            if (res) {
-              this.selectData = res;
-            }
-          });
+          if (!this.secondaryCreation) {
+            const res = await getTicketInfo({ company: this.hrInfo.Company, preferredName: this.hrInfo.Name, jobTitle: this.hrInfo['Job Title'], manager: this.hrInfo.Manager });
+            this.sonData = res;
+          } else {
+            this.sonData = { SOP: [], Access: []};
+          }
+          const res = await getListExtra({ preferredName: this.hrInfo.Name, company: this.hrInfo.Company });
+          if (res)
+            this.selectData = res;
+          this.showLoading = false;
         }
       }
     }

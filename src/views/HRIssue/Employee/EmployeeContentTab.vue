@@ -29,7 +29,7 @@
       </a-list-item>
     </template>
   </a-list> -->
-  <div class="table-wrapper">
+  <div class="employee-table-wrapper">
     <auto-table
       :showLoading="false"
       :tableStyle="tableStyle"
@@ -40,7 +40,41 @@
       <template #issueKey="{  text, item }">
         <img class="img-style" v-if="phase==='sop'" src="@/assets/img/viewavatar.svg">
         <img class="img-style" v-else src="@/assets/img/issue-type-icons.svg">
-        <a :href="item.link" target="_blank" class="ticket gutter">{{text}}</a>
+        <a :href="item.link" rel="noopener" target="_blank" class="ticket gutter">{{text}}</a>
+      </template>
+      <template #title="{text}">
+        <div class="ticket-wrapper">
+          <span class="ticket-text unpredictable-length">{{text}}</span>
+          <VSwitch :value="pwStatus(text)">
+            <template #1>
+              <InProcess/>
+            </template>
+            <template #2>
+              <a-tooltip :trigger="['hover']" placement="top" overlay-class-name="numeric-input">
+                <template  #title>
+                  <span>
+                    {{ getTooltip(text) }}
+                  </span>
+                </template>
+                <CheckCircleOutlined style="color:#3ACA60"/>
+              </a-tooltip>
+            </template>
+            <template #3>
+              <a-tooltip :trigger="['hover']" placement="top" overlay-class-name="numeric-input">
+                <template  #title>
+                  <span>
+                    {{ getTooltip(text) }}
+                  </span>
+                </template>
+                <CloseCircleOutlined style="color:#FA5757" />
+              </a-tooltip>
+              <span @click="reCreate(text)" class="button-retry">Retry</span>
+            </template>
+          </VSwitch>
+        </div>
+      </template>
+      <template #status="{ text }">
+        <div :class="['base-style', getClass(text)]" :title="text">{{text}}</div>
       </template>
     </auto-table>
   </div>
@@ -48,57 +82,135 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
 import { Prop } from 'vue-property-decorator';
-import { LockOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons-vue';
+import { LockOutlined, CheckCircleOutlined, CloseCircleOutlined, } from '@ant-design/icons-vue';
+import { PwStatusType } from './EmployeeContent.vue';
 import InProcess from '@/components/InProcess.vue';
 import AutoTable from '@/components/AutoTable.vue';
+import VSwitch from '@/components/VSwitch.vue';
+import { HRIssueModule } from '@/store/modules/hrissue';
 @Options({
   components: {
     LockOutlined,
     CheckCircleOutlined,
     InProcess,
     CloseCircleOutlined,
-    AutoTable
+    AutoTable,
+    VSwitch
   }
 })
 export default class EmployeeContentTab extends Vue {
     @Prop({ required: true }) private popData!: {};
     @Prop({ required: true }) private phase!: string;
+    @Prop({ required: true }) private ticketStatus!: string;
+    @Prop({ required: false }) private createPwStatus?: PwStatusType;
     private colum =   [
       {
-        title: 'issueKey',
+        title: 'Ticket No.',
         dataIndex: 'issueKey',
-        width: '130px',
+        width: '120px',
         showText: true,
         showSort: false,
       }, {
-        title: 'title',
+        title: 'Ticket Summary',
         dataIndex: 'title',
-        width: '100px',
-        showText: false,
+        width: '180px',
+        showText: true,
         showSort: false,
         showFilter: false,
         sortMethod: (a: any, b: any) => {
           return a.company < b.company;
         }
       }, {
-        title: 'usercode',
+        title: 'Usercode',
         dataIndex: 'usercode',
-        width: '100px',
+        width: '180px',
         showSort: false,
         showFilter: false,
       }, {
-        title: 'Creator',
-        dataIndex: 'creator',
-        width: '100px',
-        showSort: false,
-      }, {
-        title: 'status',
+        title: 'Status',
         dataIndex: 'status',
-        width: '80px',
+        width: '50px',
         showSort: false,
-        showText: false,
+        showText: true,
       },
     ];
+    private tableStyle = {
+      width: '600px',
+      height: '230px'
+    }
+
+    private getClass(text: string) {
+      const arr = text.split(' ');
+      if (arr.length > 1) {
+        return arr.join('-');
+      } else {
+        return text;
+      }
+    }
+
+
+    private pwStatus(text: string) {
+      if (text&&this.createPwStatus) {
+        if (text.indexOf('A/D (ODSDAI)') > -1) {
+          return this.createPwStatus.ODS.status;
+        } else if (text.indexOf('A/D (DAI)') > -1) {
+          return this.createPwStatus.DAI.status;
+        }
+      }
+    }
+
+    private getTooltip(text: string) {
+      if (text&&this.createPwStatus) {
+        if (text.indexOf('A/D (ODSDAI)') > -1) {
+          if (this.createPwStatus.ODS.status===2) {
+            return this.createPwStatus.ODS.password;
+          } else if (this.createPwStatus.ODS.status===3) {
+            return this.createPwStatus.ODS.message;
+          }
+        } else if (text.indexOf('A/D (DAI)') > -1) {
+          if (this.createPwStatus.DAI.status===2) {
+            return this.createPwStatus.DAI.password;
+          } else if (this.createPwStatus.DAI.status===3) {
+            return this.createPwStatus.DAI.message;
+          }
+        }
+      }
+
+    }
+
+    private reCreate(text: string) {
+      const { employeeInfo } = HRIssueModule;
+      const { extraInfo } =employeeInfo;
+      if (text.indexOf('A/D (ODSDAI)') > -1) {
+        this.$emit('create-accout', 'ODS');
+        if (extraInfo) {
+          HRIssueModule.asyncGetEmployeeInfo({ ...employeeInfo,
+            extraInfo: {
+              ...extraInfo,
+              ...{
+                ods_error_message: '',
+                ods_password: '',
+              }
+            }
+          });
+        }
+      } else {
+        this.$emit('create-accout', 'DAI');
+        if (extraInfo) {
+          HRIssueModule.asyncGetEmployeeInfo({ ...employeeInfo,
+            extraInfo: {
+              ...extraInfo,
+              ...{
+                dai_error_message: '',
+                dai_password: '',
+              }
+            }
+          });
+        }
+      }
+
+
+    }
 }
 </script>
 <style lang="scss" scoped>
@@ -151,10 +263,67 @@ export default class EmployeeContentTab extends Vue {
             }
         }
     }
-    .table-wrapper{
-      height: 330px;
-      width: 512px;
-      overflow-y: scroll;
+    .employee-table-wrapper{
+      width: 650px;
+      .ticket-wrapper{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        cursor: pointer;
+        .ticket-text{
+          display: inline-block;
+          max-width: 145px;
+          margin-right: 20px;
+        }
+        .button-retry{
+            display: inline-block;
+            margin-left: 5px;
+            padding: 1px 3px;
+            font-size: 8px;
+            line-height: 9px;
+            text-align: center;
+            color: #F05008;
+            border: 1px solid #f1966c ;
+          }
+      }
+
+    }
+    .To-Do{
+      background-color: #42526e;
+      border-color: #42526e;
+    }
+    .Access-Granted{
+      background-color: #0052cc;
+      border-color: #0052cc;
+    }
+    .Access-Revoked{
+      background-color: #00875a;
+      border-color: #00875a;
+    }
+    $colors:(
+      (title:To-Do, color:#42526e),
+      (title:Access-Granted, color:#0052cc),
+      (title:Access-Revoked, color:#00875a),
+      (title:Canceled, color:#00875a),
+      (title:Reviewed, color:#00875a),
+    );
+    @each $c in $colors{
+      .#{map-get($c, title)}{
+        background-color: map-get($c, color);
+        border-color: map-get($c, color);
+      }
+    }
+    .base-style{
+      color: #fff;
+      padding: 1px 3px;
+      border-radius: 3px;
+      text-align: center;
+      height: 15px;
+      line-height: 15px;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
 </style>

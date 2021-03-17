@@ -6,24 +6,32 @@
           <img class="logo-img" src="@/assets/img/DAI_light_green_logo.svg"/>
         </a>
         <ul class="home-header">
-          <li v-for="(item, index) in headLink" :key="index" >
-            <router-link :class="['link',{'active':index===selectedKey}]" :to="item.link">{{item.title}}</router-link>
+          <li v-for="(item, index) in headLink" class="home-nav" :key="index" >
+            <div class="dropdown-wrapper">
+              <router-link :class="['link',{'active':index===selectedKey}]" :to="item.link">{{item.title}}</router-link>
+              <div v-if="item.title==='Employees'" class="dropdown-son hrissure-router">
+                <ul class="dropdown-menu">
+                  <li @click="changeActiveKey(item.key)" :data-test="item.key" :class="['dropdown-menu-item', {'active-item':activeKey==item.key}]" v-for="(item, index) in routerData" :key="index">
+                    <img class='menu-icon'  :src='item.url'/>
+                    <span>{{item.title}}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </li>
         </ul>
         <div class="user-logos">
           <div  class='user-image gutter'>
             <img  class='user-img'  src='@/assets/img/user.svg'>
           </div>
-          <a-dropdown placement="bottomRight">
-            <span @click="e => e.preventDefault()">{{userName}}<down-outlined class="down-icon" /></span>
-            <template v-slot:overlay>
-              <a-menu>
-                <a-menu-item>
-                  <a @click="logOut">LogOut</a>
-                </a-menu-item>
-              </a-menu>
-            </template>
-          </a-dropdown>
+          <div class="dropdown-wrapper">
+            <a-dropdown @click="()=>{this.showSon= true}" trigger="[,]" placement="bottomRight">
+              <span @click="e => e.preventDefault()">{{userName}}<down-outlined class="down-icon" /></span>
+            </a-dropdown>
+            <div @click="logOut" class="dropdown-son login-out-button">
+              LogOut
+            </div>
+          </div>
         </div>
       </div>
     </template>
@@ -38,6 +46,11 @@
 </template>
 
 <script lang="ts">
+enum RouterKeys {
+  template ='/hrissue/template/list',
+  employee = '/hrissue/employee'
+}
+
 import { Options, Vue, } from 'vue-class-component';
 import BasicLayout from '@/components/layout/BasicLayout.vue';
 import { Watch } from 'vue-property-decorator';
@@ -56,18 +69,41 @@ export default class Home extends Vue {
 
   private headLink = [
     {
-      title: 'HR Issue',
+      title: 'Employees',
       link: '/hrissue'
     },
-    {
-      title: 'Jira Checklist',
-      link: '/dashboard'
-    }
+    // {
+    //   title: 'Jira Checklist',
+    //   link: '/dashboard'
+    // }
   ];
 
+  private showSon = false;
   mounted() {
     if (this.$route.path) {
       this.changeSelectedkey(this.$route.path);
+    }
+  }
+
+  private routerData = [{ title: 'New Employees', url: require('@/assets/img/icons8-pass-fail-80.png'), key: RouterKeys.employee },
+    // { title: 'Existing Employees', url: require('@/assets/img/employee_profiles.png') },
+    { title: 'Template Management', url: require('@/assets/img/icons8-load-resume-template.png'), key: RouterKeys.template }
+  ]
+
+  private activeKey = '';
+
+  private changeActiveKey(key: string) {
+    this.activeKey = key;
+  }
+
+  @Watch('$route', { immediate: true })
+  private routeChange(value: any) {
+    if (value.href.indexOf(RouterKeys.template) > -1) {
+      this.activeKey = RouterKeys.template;
+    } else if (value.href.indexOf(RouterKeys.employee) > -1) {
+      this.activeKey = RouterKeys.employee;
+    } else {
+      this.activeKey = '';
     }
   }
 
@@ -78,6 +114,23 @@ export default class Home extends Vue {
   @Watch('$route.path')
   private onRouterChange(value: string) {
     this.changeSelectedkey(value);
+  }
+
+  @Watch('activeKey')
+  private onSlectedKeysChange(value: string) {
+    switch (value) {
+    case RouterKeys.employee:
+      this.$router.push(RouterKeys.employee);
+      break;
+    case '1':
+      this.$router.push(RouterKeys.employee);
+      break;
+    case RouterKeys.template:
+      this.$router.push(RouterKeys.template);
+      break;
+    default:
+      break;
+    }
   }
 
   private changeSelectedkey(value: string) {
@@ -243,10 +296,9 @@ export default class Home extends Vue {
     flex:1;
     background: #193442;
     list-style-type:none;
-    li{
-      display: inline;
+    .home-nav{
+      float: left;
       color: #ffffff;
-      width: 101px;
       margin-right: 20px;
       .link{
         color: #ffffff;
@@ -260,7 +312,78 @@ export default class Home extends Vue {
       }
     }
   }
-
+  .dropdown-wrapper{
+    position: relative;
+    &:hover{
+      .dropdown-son{
+        display: block;
+      }
+    }
+    .dropdown-son{
+      z-index: 10;
+      display: none;
+      position: absolute;
+      top: 50px;
+      text-align: center;
+      .dropdown-menu{
+          position: relative;
+          margin: 0;
+          padding: 4px 0;
+          text-align: left;
+          list-style-type: none;
+          background-color: #fff;
+          background-clip: padding-box;
+          border-radius: 4px;
+          outline: none;
+          list-style: none;
+          box-shadow: 0 2px 8px rgb(170, 169, 169);
+          width:200px;
+          &::after{
+            clear: both;
+            content: '';
+            display:block;
+            visibility:hidden;
+          }
+      }
+      .dropdown-menu-item{
+        width: 100%;
+        display: block;
+        clear: both;
+        margin: 0;
+        padding: 5px 12px;
+        color: rgba(0,0,0,.65);
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 22px;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all .3s;
+        &:hover{
+          background: #F5F7F7;
+        }
+      }
+      .active-item{
+        font-weight: 600;
+        color: #50A1FF;
+      }
+    }
+    .hrissure-router{
+      top:60px;
+    }
+    .login-out-button{
+      right: 1px;
+      width: 70px;
+      height: 23px;
+      line-height: 23px;
+      background: #F5F7F7;
+      color:#5D656F;
+      border-radius: 4px;
+      font-size: 12px;
+      &:hover{
+        border:1px solid #1890ff;
+      }
+    }
+  }
   .user-logos{
     display: flex;
     height: 100%;

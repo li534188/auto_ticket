@@ -1,16 +1,18 @@
 <template>
   <div>
-    <header class="table-header">{{`${type}: ${tableData.length|0} Tickets`}}</header>
+    <header class="table-header">{{`${type}: ${selectIds.length|0} Tickets`}}</header>
     <div ref="tableWrapper" class="table-wrapper">
       <auto-table
+        ref="autoTableRef"
         :showLoading="showLoading"
         :colums="colum"
         v-model:table-data="tableData"
         :showChekbox="true"
         :tableStyle="tableStyle"
-        defaultCheck="true"
+        :defaultCheck="true"
         v-model:selectIds="selectIds"
         primaryKey="RealTask"
+        specialModal="true"
       >
         <template #summary="{text, item, index}">
           <span v-if="item.specialStatus!=='create'">
@@ -32,18 +34,11 @@
             </a-select-option>
           </a-select> -->
             <section class="input-wrapper search-manager-wrapper">
-              <div class="search-input" ref="searchInput" @click.stop="changeManagerShow(index)" placeholder="Manager">
-                <span>{{text}}</span>
+              <div class="search-input" :ref="'searchInput'+index" @click.stop="changeManagerShow(index)" placeholder="Manager">
+                <span class="search-place">{{text||type==='Access'?'Add Access Account':'Add SOP'}}</span>
                 <DownOutlined :class="['icon-dowload', {'icon-reserve':showManagerPrompt&&activeIndex===index}]" />
               </div>
-              <div :style="{top:(((activeIndex+1)*27+25)+'px')}" v-if="showManagerPrompt" class="prompt-wrapper">
-                <a-input class="select-search-input" v-model:value="filterText" placeholder="Basic usage" @click.stop="">
-                  <template #prefix><SearchOutlined/></template>
-                </a-input>
-                <div @click.stop="handleChange(subitem,activeIndex)" class="prompt-item" v-for="(subitem) in filterSelectData" :key="subitem">
-                  {{subitem}}
-                </div>
-              </div>
+              <CloseOutlined class="close-icon" @click="clearCreateItem(index)" />
             </section>
           </div>
         </template>
@@ -60,10 +55,23 @@
       </auto-table>
     </div>
     <div class="icon-add" >
-      <span class="icon-add-wrpper" @click="addData">
+      <span class="icon-add-wrpper" data-test="icon-add" @click="addData">
         <PlusOutlined />
         Add More...
       </span>
+    </div>
+    <div :style="{top:(popPositionY+20)+'px',left:popPositionX+'px'}" v-if="showManagerPrompt" class="modal-prompt-wrapper">
+      <a-input class="select-search-input" v-model:value="filterText" placeholder="Search" @click.stop="">
+        <template #prefix><SearchOutlined/></template>
+      </a-input>
+      <div v-if="(filterSelectData&&filterSelectData.length > 0)" class="item-wrapper">
+        <div @click.stop="handleChange(subitem,activeIndex)" class="prompt-item" v-for="(subitem) in filterSelectData" :key="subitem">
+          {{subitem}}
+        </div>
+      </div>
+      <div v-else class="item-wrapper-none">
+        You have already seleted all tickets.
+      </div>
     </div>
   </div>
 </template>
@@ -77,6 +85,7 @@ import { Prop, Watch } from 'vue-property-decorator';
 import { DeleteFilled, PlusOutlined, DownOutlined, SearchOutlined, CloseOutlined } from '@ant-design/icons-vue';
 import AutoTable from '@/components/AutoTable.vue';
 import { ModalDataObj } from './EmployeeModal.vue';
+import { ComplateJiraInfoType, ComplateJiraInfoTypeArr } from './EmployeeContent.vue';
 @Options({
   components: {
     DeleteFilled,
@@ -88,26 +97,33 @@ import { ModalDataObj } from './EmployeeModal.vue';
   }
 })
 export default class EmployeeModalTab extends Vue {
-    @Prop({ required: true }) private popData!: {};
     @Prop({ required: true }) private type!: ModalType;
     @Prop({ required: true }) private modalData!: {};
     @Prop({ required: true }) private selectChangeMethod!: {(value: string[], type: ModalType): void};
     @Prop({ required: true }) private showLoading!: boolean;
     @Prop({ required: true }) private selectData!: ModalDataObj[];
+    @Prop({ required: true }) private secondaryCreation!: boolean;
+    @Prop({ required: true }) private complateData!: ComplateJiraInfoTypeArr;
+    data() {
+      return {
+        selectIds: '',
+        tableData: [],
+        showManagerPrompt: false,
+        activeIndex: 0,
+        filterText: '',
+      };
+    }
+
     private value = '';
-    private showManagerPrompt = false;
+    private showManagerPrompt!: boolean;
     private tableStyle = {
       width: '410px',
+      height: '220px',
     }
     private selectIds: string[] = [];
-    private activeIndex = 0;
-    private filterText = ''
-    private datas=[{
-      text: '123',
-      value: '132'
-    }]
-
-    private tableData: ModalDataObj[] = [];
+    private activeIndex!: number;
+    private filterText!: string;
+    private tableData!: ModalDataObj[];
 
     private addData() {
       this.tableData.push(
@@ -117,17 +133,29 @@ export default class EmployeeModalTab extends Vue {
           RealTask: '',
           specialStatus: 'create',
         });
+      setTimeout(() => {
+        const tableObj = this.$refs.autoTableRef as Vue;
+        const wrapperObj = tableObj.$refs.fixedTable as HTMLElement;
+        wrapperObj.scrollTop = wrapperObj.scrollHeight;
+      }, 100);
     }
 
-    private changeData(index: number,) {
-      this.tableData.splice(index, 1);
-    }
+    private popPositionX = 0;
+    private popPositionY = 0;
 
 
     @Watch('modalData', { deep: true })
     private modalDataChange(val: any) {
-      const res = JSON.parse(JSON.stringify(val));
-      this.tableData = res;
+      if (!this.secondaryCreation) {
+        const res = JSON.parse(JSON.stringify(val));
+        this.selectIds = res.map((item: { RealTask: string }) => {
+          return item.RealTask;
+        });
+        this.tableData = res;
+      } else {
+        this.tableData = [];
+        this.selectIds = [];
+      }
     }
 
     @Watch('selectIds', { deep: true })
@@ -136,16 +164,6 @@ export default class EmployeeModalTab extends Vue {
     }
 
 
-    private deleteData(index: number) {
-      console.log(index);
-      this.tableData.splice(index, 1);
-      console.log(this.tableData);
-    //   this.tableData.push({ issueKey: 'test',
-    //     title: 'test',
-    //     operation: 'delete',
-    //     status: 'create'
-    //   });
-    }
 
     private handleChange(text: string, index: number) {
       const data = this.tableData[index];
@@ -166,19 +184,22 @@ export default class EmployeeModalTab extends Vue {
       }, 100);
     }
 
-    private changeManagerShow(index: number) {
 
+    private changeManagerShow(index: number) {
+      const searchInput = this.$refs['searchInput'+index] as HTMLElement;
+      if (searchInput) {
+        this.popPositionX = searchInput.getBoundingClientRect().left;
+        this.popPositionY = searchInput.getBoundingClientRect().top;
+      }
       const searchObj = this.$refs.tableWrapper as HTMLElement;
       this.showManagerPrompt = true;
       this.activeIndex = index;
-      console.log(searchObj.scrollTop);
       setTimeout(() => {
-        searchObj.scrollTop = index*27;
+        searchObj.scrollTop = index*32;
       }, 200);
       // const newArr = JSON.parse(JSON.stringify(this.itemList));
       // this.itemList = newArr.filter((item: string) => item.toLowerCase().indexOf(value.toLowerCase())>-1);
       window.addEventListener('click', this.closeMamagerPrompt);
-
     }
 
     private closeMamagerPrompt() {
@@ -190,25 +211,40 @@ export default class EmployeeModalTab extends Vue {
       if (item) {
         return item.join(',');
       }
+    }
 
+    private clearCreateItem(idnex: number) {
+      this.tableData.splice(idnex, 1);
     }
 
     get filterSelectData() {
-      const { filterText, selectData } = this;
+      const { filterText, selectData, secondaryCreation } = this;
       const list = JSON.parse(JSON.stringify(selectData));
-      return list.map((item: {summary: string}) => {
+      const arr: string[] = [];
+      list.map((item: {summary: string}) => {
         const checkRepeat = this.tableData.some((element: ModalDataObj) => {
           return element.summary === item.summary;
         });
+        let complateFlag = false;
+        if (secondaryCreation) {
+          complateFlag = this.complateData.some((element: ComplateJiraInfoType) => {
+            const arr = element.title&&element.title.split(':');
+            const contrastArr = item.summary&&item.summary.split(':');
+            const str = arr.length===2&&arr[1];
+            const contraststr = contrastArr.length===2&&contrastArr[1];
+            return str === contraststr;
+          });
+        }
+
         if (!filterText) {
-          if (!checkRepeat)
-            return item.summary;
+          if (!checkRepeat&&!complateFlag)
+            arr.push(item.summary);
         } else  if (filterText && item.summary && item.summary.toLowerCase().indexOf(filterText.toLowerCase()) > -1) {
-          if (!checkRepeat)
-            return item.summary;
+          if (!checkRepeat&&!complateFlag)
+            arr.push(item.summary);
         }
       });
-
+      return arr;
     }
 
     get colum() {
@@ -327,23 +363,53 @@ export default class EmployeeModalTab extends Vue {
     }
     .search-input{
         border: 1px solid #d9d9d9;
-        width: 350px;
+        width: 320px;
+        margin-right: 10px;
         height: 18px;
-        line-height: 18px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        .search-place{
+          text-align: center;
+          color: #A2A8B0;
+          flex: 1;
+        }
     }
     .search-manager-wrapper{
-      width: 122px;
+      display: flex;
+      align-items: center;
       margin-right: unset;
-      .prompt-wrapper{
-        position: absolute;
+      .close-icon{
+        cursor: pointer;
+        &:hover{
+          color: #5095fc;
+        }
+      }
+    }
+    .modal-prompt-wrapper{
+        position: fixed;
         width: 350px;
-        height: 158px;
         margin: 1px 0 0;
-        padding: 0 0 1px;
+        padding: 10px 10px;
         border-radius: 3px;
-        overflow: scroll;
         background-color: #fff;
         z-index: 9;
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.188729);
+        border-radius: 5px;
+        .item-wrapper{
+          height: 240px;
+          overflow-y: auto;
+          padding-left: 15px;
+        }
+        .item-wrapper-none{
+          height: 240px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: #A2A8B0;
+          font-size: 10px;
+        }
         .select-search-input{
           height: 20px;
           line-height: 20px;
@@ -374,9 +440,8 @@ export default class EmployeeModalTab extends Vue {
           }
         }
       }
-    }
     .icon-dowload{
-      font-size: 13px;
+      font-size: 9px;
       transition: all 0.5s;
       transform: rotate(360deg);
       float: right;

@@ -2,12 +2,14 @@ import { createRouter, createWebHistory, RouteRecordRaw, } from 'vue-router';
 import Home from '../views/Home.vue';
 import User from '../views/User.vue';
 import Error from '../views/Error.vue';
+import CreateKey from '../views/CreateKey.vue';
+
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
-    redirect: '/dashboard',
+    redirect: '/hrissue',
     component: Home,
     children: [
       {
@@ -42,12 +44,28 @@ const routes: RouteRecordRaw[] = [
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('../views/Dashboard/index.vue'),
+        redirect: '/dashboard/list',
+        children: [
+          {
+            path: 'list',
+            name: 'listview',
+            component: () => import('../views/Dashboard/ListView.vue'),
+          }, {
+            path: 'operate',
+            name: 'operateJira',
+            component: () => import('../views/Dashboard/CheckList.vue'),
+          },
+        ]
       },
     ]
   }, {
     path: '/login',
     name: 'Login',
     component: User,
+  }, {
+    path: '/encrypt-info',
+    name: 'CreateKey',
+    component: CreateKey,
   }, {
     path: '/:pathMatch(.*)',
     name: 'error',

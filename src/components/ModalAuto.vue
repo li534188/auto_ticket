@@ -17,7 +17,7 @@
         </footer>
         <footer v-if="showFooter" class="modal-footer">
           <div>
-            <a-button @click="confirm" class="auto-button create-button">{{comfileText||'ok'}}</a-button>
+            <a-button  data-test="confirm-button" @click="confirm" class="auto-button create-button">{{comfileText||'ok'}}</a-button>
             <a-button @click="test" v-show="cancelText" class="auto-button create-button">{{cancelText||'cancel'}}</a-button>
           </div>
         </footer>
@@ -58,8 +58,6 @@ export default class AutoModal extends Vue {
 
   @Watch('show', { immediate: true })
   private parentChangeShow(val: boolean) {
-    console.log('pppppppppp');
-    console.log(val);
     this.thisShow = val;
   }
 }

@@ -22,7 +22,7 @@ interface HrIssueListType {
   issue_number: string;
 }
 
-interface EmployeeInfoType {
+export interface EmployeeInfoType {
   employee_name: string;
   preferred_name: string;
   job_title: string;
@@ -33,7 +33,13 @@ interface EmployeeInfoType {
   manager: string;
   issue_number: string;
   template_exist: boolean;
-  [key: string]: any;
+  status?: string;
+  issue_link: string;
+  name: string;
+  preferred_full_name: string;
+  extraInfo?: {
+    [ key: string ]: any;
+  };
 }
 
 @Module({ dynamic: true, store, name: 'hrissue' })
@@ -51,6 +57,9 @@ export class HRIssue extends VuexModule implements AppState {
       manager: '',
       issue_number: '',
       template_exist: false,
+      issue_link: '',
+      name: '',
+      preferred_full_name: ''
     };
 
   @Mutation
@@ -62,12 +71,11 @@ export class HRIssue extends VuexModule implements AppState {
   async asyncGetIssueList() {
     const data: {userName: string; password: string} = { userName: 'jason.yang', password: 'j3Pp4&C0' };
     LoadingModule.asyncChangeStatus(true);
-    post('/api/pending-issue', data).then(res => {
-      LoadingModule.asyncChangeStatus(false);
-      if (res) {
-        this.changeHrIssueList(res);
-      }
-    });
+    const res = await post('/api/pending-issue', data);
+    LoadingModule.asyncChangeStatus(false);
+    if (res) {
+      this.changeHrIssueList(res);
+    }
   }
 
   @Mutation

@@ -41,6 +41,14 @@ module.exports = {
   transformIgnorePatterns: ['<rootDir>/node_modules/(?!lodash-es)'],
   collectCoverage: true,
   collectCoverageFrom: [
-    'src/**/**/EmployeeHeader.vue', '!src/components/*.vue'
+    'src/**/Template/NewTemplate.vue', 'src/**/Employee/*.vue', '!src/**/Employee/index.vue', '!src/components/*.vue',
+    '!src/**/Employee/EmployeeContentTab.vue',
+    'src/**/User.vue'
   ],
+  setupFiles: ['<rootDir>/jest.setup.js'],
+  coverageReporters: [
+    'json-summary',
+    'text',
+    'lcov'
+  ]
 };

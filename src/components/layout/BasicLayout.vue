@@ -8,7 +8,7 @@
         <slot name="content" />
       </div>
     </a-layout-content>
-    <a-layout-footer style="text-align: center;padding:12px 50px">
+    <a-layout-footer class="basic-footer" style="">
       {{`© ${date} Data Analysis Incorporated. All rights reserved.`}}
     </a-layout-footer>
   </a-layout>
@@ -47,6 +47,12 @@ export default class BasicLayout extends Vue {
   height: 78px;
   padding: 0 ;
   line-height: 78px;
+}
+
+.basic-footer{
+  text-align: center;
+  padding:12px 50px;
+  background: #f6faf9;
 }
 
 </style>

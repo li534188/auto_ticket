@@ -80,7 +80,7 @@ export async function updateTeplate(data: {
   return res;
 }
 
-export async function autoCreate(data: { issueNum: string; manager: string; jobTitle: string; jiraSummary: string; allTask: string[] }) {
+export async function autoCreate(data: { issueNum: string; manager: string; jobTitle: string; jiraSummary: string; allTask: string[]; user: string }) {
   const res = await post('/api/auto-create', data);
   return res;
 }
@@ -110,3 +110,41 @@ export async function syncTemplate(data: { jobTitle: string; manager: string; so
   return res;
 }
 
+export async function getIssueStatus(data: { issueNumList: string[] }) {
+  const res = await post('/api/issue-status', data);
+  return res;
+}
+
+export async function getCloseTicket(data: { issueNum: string }) {
+  const res = await post('/api/close-ticket', data);
+  return res;
+}
+
+export async function getEncryptInfo(data: { encryptInfo: string }) {
+  const res = await post('/api/encrypt-info', data);
+  return res;
+}
+
+export async function getConfluence(data: { jiraSummary: string }) {
+  const res = await post('/api/get-confluence', data);
+  return res;
+}
+
+export async function getAllEmployee() {
+  const res = await get('/api/list-all-employee');
+  return res;
+}
+
+export async function generalDaiAccount(data: {
+  jobTitle: string;
+  company: string;
+  jiraSummary: string;
+  office: string;
+  department: string;
+  manager: string;
+  issueNum: string;
+  dai_or_ods: string[];
+  ticketNum: string[];}) {
+  const res = await post('/api/dai-account', data);
+  return res;
+}

@@ -9,38 +9,34 @@ import flushPromises from 'flush-promises';
 test('user.vue login', async() => {
 
   const mock = new MockAdapter(axios);
-  const data = { mseeage: 'false',
+  const data = { message: 'false',
     userName: '123' };
   mock.onPost('/api/login').reply(200, data);
   const wrapper = mount(User, {
     data() {
       return {
-        form: {
           userName: 'tset',
           passWord: 'tset',
-        },
         test: 789
       };
     }
   });
 
   wrapper.setData({
-    form: {
       userName: '',
       passWord: 'tset',
-    },
   });
 
   await wrapper.find('.login-button').trigger('click');
 
   expect(wrapper.text()).toContain('username required');
+  
 
 
   await wrapper.setData({
-    form: {
       userName: 'test',
       passWord: 'tset',
-    },
+      test:'999'
   });
 
   // test click
@@ -48,14 +44,14 @@ test('user.vue login', async() => {
 
   await flushPromises();
 
-  expect(wrapper.text()).toContain('Wrong username or password');
+  expect(wrapper.text()).toContain('false');
 
   // test key down
-  await wrapper.find('.wrapper').trigger('keydown.enter');
+  await wrapper.find('.login-wrapper').trigger('keydown.enter');
 
   await flushPromises();
 
-  expect(wrapper.text()).toContain('Wrong username or password');
+  expect(wrapper.text()).toContain('false');
 
 });
 
@@ -74,16 +70,14 @@ test('user.vue keyword', async() => {
   };
 
   const mock = new MockAdapter(axios);
-  const data = { mseeage: 'Success',
+  const data = { message: 'Success',
     userName: '123' };
   mock.onPost('/api/login').reply(200, data);
   const wrapper = mount(User, {
     data() {
       return {
-        form: {
           userName: 'tset',
           passWord: 'tset',
-        },
         test: 789
       };
     },
@@ -95,7 +89,7 @@ test('user.vue keyword', async() => {
     }
   });
     // test key down
-  await wrapper.find('.wrapper').trigger('keydown.enter');
+  await wrapper.find('.login-wrapper').trigger('keydown.enter');
 
   await flushPromises();
   console.log(wrapper.vm.$router);

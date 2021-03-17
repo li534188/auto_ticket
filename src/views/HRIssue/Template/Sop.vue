@@ -1,31 +1,35 @@
 <template>
-  <a-form>
-    <a-form-item >
-      <a-checkbox-group class="special-box" :disabled="!allowEdit" style="width:100%" v-model:value="selectRadio">
-        <a-checkbox v-for="(item, key) in  radioData"  :key="key" :value="item" >
-          {{formateLabel(item)}}
-        </a-checkbox>
+  <div class="sop-wrapper">
+    <a-form>
+      <a-form-item >
+        <a-checkbox-group class="special-box" :disabled="!allowEdit" style="width:100%" v-model:value="selectRadio">
+          <a-checkbox v-for="(item, key) in  radioData"  :key="key" :value="item" >
+            {{formateLabel(item)}}
+          </a-checkbox>
+        </a-checkbox-group>
+      </a-form-item>
+      <a-checkbox-group class="special-box" style="width:100%" :disabled="!allowEdit" v-model:value="form">
+        <div v-for="(item, key) in  selectDatas" :key="key" class="sop-phase" >
+          <a-row >
+            <a-col :span="24">
+              <div class="phase-title">
+                {{key}}
+              </div>
+            </a-col>
+          </a-row >
+          <a-row type="flex" align="top" class="list-style">
+            <a-col class="item-style" :title="key" :span="8" v-for="(subItem, key) in  item" :key="key" >
+              <a-checkbox :value="subItem">
+                <div class="sop-item-wrapper">
+                  <span class="sop-item">{{key}}</span>
+                </div>
+              </a-checkbox>
+            </a-col>
+          </a-row>
+        </div>
       </a-checkbox-group>
-    </a-form-item>
-    <a-checkbox-group class="special-box" style="width:100%" :disabled="!allowEdit" v-model:value="form">
-      <div v-for="(item, key) in  selectDatas" :key="key" class="sop-phase" >
-        <a-row >
-          <a-col :span="24">
-            <div class="phase-title">
-              {{key}}
-            </div>
-          </a-col>
-        </a-row >
-        <a-row class="list-style">
-          <a-col class="item-style" :title="key" :span="8" v-for="(subItem, key) in  item" :key="key" >
-            <a-checkbox :value="subItem">
-              {{key}}
-            </a-checkbox>
-          </a-col>
-        </a-row>
-      </div>
-    </a-checkbox-group>
-  </a-form>
+    </a-form>
+  </div>
 </template>
 <script lang="ts">
 import { Vue } from 'vue-class-component';
@@ -72,7 +76,7 @@ export default class Sop extends Vue {
   get selectDatas() {
     const data = this.allData;
     // {sop:{sop1:123,sop2:456}}
-    const newData: {[key: string]: {[key: string]: string}} = { 'Policies': {}, 'Other Documents': {}, 'Work Instructions': {}, sop: {}};
+    const newData: {[key: string]: {[key: string]: string}} = { 'Policies': {}, 'Other Documents': {}, 'Work Instructions': {}, SOP: {}};
     let sopFlag = true;
     for (const element in data) {
       sopFlag = true;
@@ -89,7 +93,7 @@ export default class Sop extends Vue {
         }
       }
       if (sopFlag) {
-        newData.sop[element] =  data[element];
+        newData.SOP[element] =  data[element];
       }
     }
     return newData;
@@ -114,59 +118,111 @@ export default class Sop extends Vue {
   // });
   // return newData;
 
-  @Watch('selectRadio', { immediate: true })
-  private onRadioChange(value: string[]) {
+  @Watch('selectRadio')
+  private onRadioChange(value: string[], oldValue: string[]) {
     const { sopDefaultSelect, templateModel } = this;
-    let arr: string[] = [];
-    if (templateModel==='create') {
-      if (Array.isArray(value)&&value.length > 0) {
-        value.map(item => {
-          arr = arr.concat(sopDefaultSelect[item]);
+    // reduce
+    if (templateModel==='create'||this.allowEdit) {
+      const formValue = JSON.parse(JSON.stringify(this.form));
+      oldValue.map(item => {
+        sopDefaultSelect[item]&&sopDefaultSelect[item].map((val: string) => {
+          const index = formValue.findIndex((sumbitem: string) => sumbitem === val);
+          if (index > -1)
+            formValue.splice(index, 1);
         });
-      }
-      const newarr = arr.filter((item, index, arr) => {
+      });
+      // add
+      value.map(item => {
+        sopDefaultSelect[item]&&sopDefaultSelect[item].map((val: string) => {
+          formValue.push(val);
+        });
+      });
+      const newarr = formValue.filter((item: string, index: number, arr: string[]) => {
         return arr.indexOf(item, 0) === index;
       });
       this.form = newarr;
     }
+    // let arr: string[] = [];
+    // if (templateModel==='create'||this.allowEdit) {
+    //   // reduce
+    //   const formValue = JSON.parse(JSON.stringify(this.form));
+    //   if (oldValue.length > value.length) {
+    //     let reduceStr = '';
+    //     oldValue.map(item => {
+    //       if (value.indexOf(item) < 0) {
+    //         reduceStr = item;
+    //       }
+    //       reduceStr&&sopDefaultSelect[reduceStr]&&sopDefaultSelect[reduceStr].map((val: string) => {
+    //         const index = formValue.findIndex((sumbitem: string) => sumbitem === val);
+    //         if (index > -1)
+    //           formValue.splice(index, 1);
+    //       });
+    //       reduceStr = '';
+    //     });
+    //   } else {
+    //     let addStr = '';
+    //     value.map(item => {
+    //       if (oldValue.indexOf(item) < 0) {
+    //         addStr = item;
+    //       }
+    //       addStr&&sopDefaultSelect[addStr]&&sopDefaultSelect[addStr].map((val: string) => {
+    //         formValue.push(val);
+    //       });
+    //       addStr = '';
+    //     });
+    //   }
+    //   // add
+    //   // reduce
     this.$emit('update:phase', value);
   }
 
   @Watch('form')
   private onitemChange() {
     const { selectRadio, form } = this;
-    console.log(form);
     this.$emit('update:sopValue', selectRadio?form:[]);
   }
 
   @Watch('allowEdit')
   private allowEditChange(value: string) {
     if (!value&&this.templateModel!=='create') {
-      this.form = this.exitSop;
+      this.form = JSON.parse(JSON.stringify(this.exitSop));
       this.selectRadio = this.exitPhase;
     }
   }
 
   @Watch('exitSop', { deep: true, immediate: true })
   private exitSopChange(value: string[]) {
-    this.form = value;
+    this.form = JSON.parse(JSON.stringify(value));
   }
 
   @Watch('exitPhase',  { immediate: true })
   private exitPhaseChange(value: string[]) {
-    console.log(value);
     this.selectRadio = value;
   }
 
 }
 </script>
 <style lang="scss" scoped>
+  .sop-wrapper{
+    height: 480px;
+    overflow-y: scroll;
+  }
   .list-style{
-    line-height: 2.5rem;
+    line-height: 30px;
     .item-style{
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        // overflow: hidden;
+        // text-overflow: ellipsis;
+        // white-space: nowrap;
+        .sop-item-wrapper{
+          display: block;
+          float: right;
+          max-width: 250px;
+          .sop-item{
+            line-height: 15px;
+            display: inline-block;
+            vertical-align: text-top;
+          }
+        }
       }
   }
   .ant-radio-wrapper{

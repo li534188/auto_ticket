@@ -11,12 +11,11 @@
         :showLoading="showLoading"
         :colums="colum"
         v-model:table-data="filterTableData"
-        :filterData="filterData"
         :tableStyle="tablestyle"
         v-model:selectIds="selectIds"
-        :changeSearchValue="changeSearchValue"
         :showChekbox="true"
         :showLine="true"
+        :reverseData="reverseData"
       >
         <template #job_title="{  text, item }">
           <a @click="openTemplate(text, item)" class="ticket-name">{{text}}</a>
@@ -27,11 +26,24 @@
         <template #created_time="{ text }">
           <span >{{formatTime(text)}}</span>
         </template>
+        <template #sort_company >
+          <Filter
+            :filterData="filterData.company"
+            filterType="company"
+            v-model:value="filterSelectData.company"
+          />
+        </template>
+        <template #sort_manager >
+          <Filter
+            :filterData="filterData.manager"
+            v-model:value="filterSelectData.manager"
+          />
+        </template>
       </auto-table>
     </div>
     <div class="bottom-button">
       <a-pagination size="small" :defaultPageSize="20" :total="tableDatas&&tableDatas.length" v-model:current="currentPage" />
-      <a-button v-if="selectIds&&selectIds.length > 0" @click="showConfirm" class="auto-button delete-button">delete</a-button>
+      <a-button v-if="selectIds&&selectIds.length > 0" @click="showConfirm" class="auto-button delete-button">Delete</a-button>
     </div>
   </div>
 
@@ -46,7 +58,7 @@ interface FormatCompany{
 import { Options, Vue, } from 'vue-class-component';
 import { SearchOutlined, LeftOutlined, LoadingOutlined } from '@ant-design/icons-vue';
 import moment from 'moment';
-import AutoTable from '@/components/AutoTable.vue';
+import { Filter, AutoTable } from '@/components';
 import Sop from './Sop.vue';
 import { searchTemplate, deleteTemplate } from '@/utils/server';
 import Access from './Access.vue';
@@ -54,6 +66,7 @@ import { TemplateModule } from '@/store/modules/template';
 import * as _ from 'lodash';
 import { Modal } from 'ant-design-vue';
 import { message } from 'ant-design-vue';
+import { Watch } from 'vue-property-decorator';
 @Options({
   components: {
     Sop,
@@ -61,15 +74,17 @@ import { message } from 'ant-design-vue';
     SearchOutlined,
     LeftOutlined,
     AutoTable,
-    LoadingOutlined
+    LoadingOutlined,
+    Filter
   },
 })
 export default class TemplateList extends Vue {
 
+
     // data
     private tablestyle= {
-      width: '606px',
-      height: '525px'
+      width: '950px',
+      height: '585px',
     }
     private selectIds: string[] = [];
     private companyList: string[] = [];
@@ -77,20 +92,19 @@ export default class TemplateList extends Vue {
     private searchInput = '';
     private currentPage = 1;
     private showLoading = false;
-    private tableDatas: any = []
-    private companyAndManagerSearch: {company: string; manager: string} = { company: '', manager: '' };
-
+    private tableDatas = [];
+    private sortStatus = false;
     private colum =   [
       {
         title: 'Template Name',
         dataIndex: 'job_title',
-        width: '180px',
+        width: '220px',
         showText: true,
         showSort: false,
       }, {
         title: 'Company',
         dataIndex: 'company',
-        width: '150px',
+        width: '250px',
         showText: true,
         showSort: false,
         showFilter: true,
@@ -100,36 +114,35 @@ export default class TemplateList extends Vue {
       }, {
         title: 'Manager',
         dataIndex: 'manager',
-        width: '110px',
+        width: '150px',
         showSort: false,
         showFilter: true,
       }, {
         title: 'Creator',
         dataIndex: 'creator',
-        width: '110px',
+        width: '180px',
         showSort: false,
       }, {
         title: 'Created Time',
         dataIndex: 'created_time',
-        width: '110px',
+        width: '200px',
         showSort: true,
         showText: true,
-        sortMethod: (a: any, b: any) => {
-          return moment(a.time).isBefore(b.time);
-        }
+        sortMethod: '',
       },
     ];
+
+    private filterSelectData = {
+      company: [],
+      manager: []
+    }
 
     // hooks
     mounted() {
       this.getTemplateData({ jobTitle: '', manager: '', company: '' });
     }
 
-    // computed
-
-
     get filterData()  {
-      console.log(TemplateModule);
       return {
         company: TemplateModule.companyList,
         manager: TemplateModule.managerList,
@@ -152,19 +165,16 @@ export default class TemplateList extends Vue {
     }
 
 
-    // method
-    private onChange(pagination: any, filters: any, sorter: any) {
-      console.log('params', pagination, filters, sorter);
-    }
-
     private openTemplate(text: string, item: {id: string; company: string; job_title: string; manager: string}) {
       const { id, company, job_title, manager } = item;
       this.$router.push({ path: '/hrissue/template/detail/edit', query: { templateId: id, company, job_title, manager  }});
     }
 
-    private changeSearchValue(value: { manager: string; company: string }) {
-      this.companyAndManagerSearch = value;
-      this.getTemplateData({ jobTitle: this.searchInput, manager: value.manager||'', company: value.company||'' });
+    @Watch('filterSelectData', { deep: true })
+    private searchDataByFilter(value: {company: string[];manager: string[]}) {
+      const manager = value.manager&&value.manager.join('|');
+      const company = value.company&&value.company.join('|');
+      this.getTemplateData({ jobTitle: this.searchInput, manager: manager||'', company: company||'' });
     }
 
     private jumpToDetail() {
@@ -172,7 +182,9 @@ export default class TemplateList extends Vue {
     }
 
     private searchList =  _.debounce(() => {
-      this.getTemplateData({ jobTitle: this.searchInput, manager: '', company: '' });
+      const manager = this.filterSelectData.manager&&this.filterSelectData.manager.join('|');
+      const company = this.filterSelectData.company&&this.filterSelectData.company.join('|');
+      this.getTemplateData({ jobTitle: this.searchInput, manager, company });
     }, 500);
 
     private getTemplateData(data: { jobTitle: string; manager: string; company: string }) {
@@ -180,6 +192,9 @@ export default class TemplateList extends Vue {
       this.showLoading = true;
       searchTemplate({ jobTitle, manager, company }).then((res) => {
         this.showLoading = false;
+        if (this.sortStatus&&res.length> 0) {
+          res.reverse();
+        }
         this.tableDatas = res;
       });
     }
@@ -198,7 +213,6 @@ export default class TemplateList extends Vue {
             const res  = this.selectIds.reduce((pre: string, cur: string) => {
               return `${pre},${cur}`;
             });
-            console.log(res);
             const result = deleteTemplate({ templateId: res });
             result.then(data => {
               this.showLoading = false;
@@ -208,12 +222,20 @@ export default class TemplateList extends Vue {
                 message.info('Failed To Deleted!');
               }
               this.selectIds = [];
-              this.getTemplateData({ jobTitle: this.searchInput, manager: this.companyAndManagerSearch.manager, company: this.companyAndManagerSearch.company, });
+              const manager = this.filterSelectData.manager&&this.filterSelectData.manager.join('|');
+              const company = this.filterSelectData.company&&this.filterSelectData.company.join('|');
+              this.getTemplateData({ jobTitle: this.searchInput, manager, company });
             });
           }
 
         },
       });
+    }
+    private reverseData(sortStatus: boolean) {
+      this.sortStatus = sortStatus;
+      const res = JSON.parse(JSON.stringify(this.tableDatas));
+      res.reverse();
+      this.tableDatas = res;
     }
 
 
@@ -223,10 +245,10 @@ export default class TemplateList extends Vue {
 
 <style lang="scss" scoped>
     .template-list-wrapper{
-        padding: 39px 20px 0px 55px;
+        padding: 40px 30px 0 30px;
     }
     .template-search{
-        width: 563px;
+        width: 80%;
         border-radius: 3px;
         height: 28px;
         line-height: 28px;
@@ -235,6 +257,9 @@ export default class TemplateList extends Vue {
       height: 15px;
     }
     .template-title{
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
         margin-bottom: 35px;
         .create-button{
             height: 15px;
@@ -252,11 +277,11 @@ export default class TemplateList extends Vue {
       justify-content: space-between;
       flex-direction: row-reverse;
       margin-right: 75px;
-      margin-top: 20px;
+      margin-top: 60px;
     }
     .table-wrapper{
-      height: 580px;
-      width: 700px;
+      height: 585px;
+      width: 100%;
       overflow: hidden;
     }
 </style>
