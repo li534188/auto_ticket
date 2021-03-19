@@ -72,10 +72,10 @@ export default class Home extends Vue {
       title: 'Employees',
       link: '/hrissue'
     },
-    // {
-    //   title: 'Jira Checklist',
-    //   link: '/dashboard'
-    // }
+    {
+      title: 'Jira Checklist',
+      link: '/dashboard'
+    }
   ];
 
   private showSon = false;
@@ -343,6 +343,12 @@ export default class Home extends Vue {
             content: '';
             display:block;
             visibility:hidden;
+          }
+          .menu-icon{
+            width: 15px;
+            height: 15px;
+            margin-right: 10px;
+            color: #6A778B;
           }
       }
       .dropdown-menu-item{

@@ -18,7 +18,7 @@
           :itemValue='item.value' />
       </div>
       <div v-else>
-        <DatePicker  v-if="!switchModel" :timeType="(form&&form.time)||''" v-model:dateValue="dateValue"/>
+        <DatePicker :exitValue="exitValue" v-if="!switchModel" :timeType="(form&&form.time)||''" v-model:dateValue="dateValue"/>
       </div>
     </a-col>
   </a-row>
@@ -42,11 +42,18 @@ interface CronValueType{
     reduce<U>(callbackfn: (previousValue: U, currentValue: CronItemType, currentIndex?: number, array?: readonly CronItemType[]) => U, initialValue: U): U;
     map(callbackfn: (item: CronItemType) => CronItemType): CronItemType[];
 }
+
+export interface ExitValueType{
+    pickerData: PickerFormType;
+    switchModel: boolean;
+    pickerCron: string;
+    expressionCron: string;
+}
 import { Options, Vue, } from 'vue-class-component';
-import DatePicker from './DatePicker.vue';
+import DatePicker, { PickerFormType } from './DatePicker.vue';
 import { AutoSelect, AutoSwitch } from '@/components';
 import CornInputItem from './CornInputItem.vue';
-import { Watch } from 'vue-property-decorator';
+import { Prop, Watch } from 'vue-property-decorator';
 import { message } from 'ant-design-vue';
 // import { isValidCron } from 'cron-validator';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -60,6 +67,17 @@ const  cronValidator = require('cron-expression-validator');
   },
 })
 export default class PreCron extends Vue {
+    @Prop() private exitValue?: ExitValueType;
+    @Watch('exitValue', { immediate: true, })
+    private exitValueChange(value: ExitValueType) {
+      console.log('ffffff');
+      console.log(value);
+      if (value) {
+        const { switchModel, expressionCron } = value;
+        console.log(expressionCron);
+        this.switchModel = switchModel;
+      }
+    }
     private form: {time: string} = { time: 'Day' }
     private timeNumber = 1;
     private switchModel = false;

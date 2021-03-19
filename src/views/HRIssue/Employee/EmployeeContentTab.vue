@@ -47,17 +47,22 @@
           <span class="ticket-text unpredictable-length">{{text}}</span>
           <VSwitch :value="pwStatus(text)">
             <template #1>
-              <InProcess/>
+              <InProcess class="status-icon"/>
             </template>
             <template #2>
-              <a-tooltip :trigger="['hover']" placement="top" overlay-class-name="numeric-input">
+              <a-tooltip :trigger="['hover',]" placement="top" overlay-class-name="numeric-input">
                 <template  #title>
                   <span>
-                    {{ getTooltip(text) }}
+                    Password:
                   </span>
+                  <span :class="[{'copy-password':copyStatus}]">
+                    {{getTooltip(text)}}
+                  </span>
+                  <img @click="copypw(getTooltip(text))" @mousemove="selectStyle" @mouseleave="outStyle" class='copy-image'  src='@/assets/img/Vector.svg'>
                 </template>
-                <CheckCircleOutlined style="color:#3ACA60"/>
+                <img  class='pass-image'  src='@/assets/img/icons8-key-96.svg'>
               </a-tooltip>
+              <CheckCircleOutlined class="status-icon" style="color:#3ACA60"/>
             </template>
             <template #3>
               <a-tooltip :trigger="['hover']" placement="top" overlay-class-name="numeric-input">
@@ -66,7 +71,7 @@
                     {{ getTooltip(text) }}
                   </span>
                 </template>
-                <CloseCircleOutlined style="color:#FA5757" />
+                <CloseCircleOutlined class="status-icon" style="color:#FA5757" />
               </a-tooltip>
               <span @click="reCreate(text)" class="button-retry">Retry</span>
             </template>
@@ -139,6 +144,8 @@ export default class EmployeeContentTab extends Vue {
       height: '230px'
     }
 
+    private copyStatus = false;
+
     private getClass(text: string) {
       const arr = text.split(' ');
       if (arr.length > 1) {
@@ -175,7 +182,6 @@ export default class EmployeeContentTab extends Vue {
           }
         }
       }
-
     }
 
     private reCreate(text: string) {
@@ -208,8 +214,23 @@ export default class EmployeeContentTab extends Vue {
           });
         }
       }
+    }
 
+    private copypw(text: string) {
+      const input = document.createElement('input');   // 直接构建input
+      input.value = text;  // 设置内容
+      document.body.appendChild(input);    // 添加临时实例
+      input.select();   // 选择实例内容
+      document.execCommand('Copy');   // 执行复制
+      document.body.removeChild(input); // 删除临时实例
+    }
 
+    private selectStyle() {
+      this.copyStatus = true;
+    }
+
+    private outStyle() {
+      this.copyStatus = false;
     }
 }
 </script>
@@ -273,7 +294,10 @@ export default class EmployeeContentTab extends Vue {
         .ticket-text{
           display: inline-block;
           max-width: 145px;
-          margin-right: 20px;
+          margin-right: 5px;
+        }
+        .status-icon{
+          margin-left: 20px;
         }
         .button-retry{
             display: inline-block;
@@ -324,6 +348,14 @@ export default class EmployeeContentTab extends Vue {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    .copy-image{
+      width: 10px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    .copy-password{
+      background-color: #1e71ee;
     }
 
 </style>

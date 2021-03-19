@@ -41,7 +41,7 @@
         </div>
         <div class="error-info" v-if="onCreateDown&&(!form.company)">Pleace enter company</div>
       </section>
-      <section class="input-wrapper search-manager-wrapper">
+      <section class="input-wrapper search-manager-wrapper-template">
         <div class="input-lebal">Manager *</div>
         <a-input :class="['search-manager',(onCreateDown&&!form.manager)?'error-style':'']" :disabled="!allowEdit" v-model:value="form.manager" placeholder="Manager">
           <template #prefix> <search-outlined /></template>
@@ -471,7 +471,7 @@ export default class NewTemplate extends Vue {
     .search-select{
       width: 250px;
     }
-    .search-manager-wrapper{
+    .search-manager-wrapper-template{
       position: relative;
       width: 200px;
       margin-right: unset;

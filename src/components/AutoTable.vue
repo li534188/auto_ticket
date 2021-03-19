@@ -42,7 +42,7 @@
               <loading-outlined style="font-size: 35px" spin />
             </template>
           </a-spin>
-          <div class="empty-info" v-if="thisTableData.length===0&&!showLoading">No Data</div>
+          <div class="empty-info" v-if="thisTableData&&thisTableData.length===0&&!showLoading">No Data</div>
         </div>
         <tbody v-show="!showLoading">
           <tr  :class="['tr-style','tr-body',{'show-line':showLine}, {'tr-checked':itemInArr(item[primaryKey]||item.id)}, {'special-tr':specialModal}, {'special-tr-checked':specialModal&&itemInArr(item[primaryKey]||item.id)}]" v-for="(item,index)  in thisTableData" :key="item[primaryKey]">

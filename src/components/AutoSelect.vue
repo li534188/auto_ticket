@@ -20,7 +20,7 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import { DownOutlined } from '@ant-design/icons-vue';
-import { Prop, } from 'vue-property-decorator';
+import { Prop, Watch, } from 'vue-property-decorator';
 @Options({
   components: {
     DownOutlined
@@ -52,7 +52,17 @@ export default class AutoSelect extends Vue {
       this.companyLebal = title;
       this.showSelect = false;
     }
+  }
 
+  @Watch('value')
+  private valueChange(val: string) {
+    if (this.selectType === 'company') {
+      this.options.forEach(element => {
+        if (element.value===val) {
+          this.companyLebal = element.title;
+        }
+      });
+    }
   }
 }
 </script>
@@ -114,8 +124,9 @@ export default class AutoSelect extends Vue {
     background: #FFFFFF;
     z-index: 5;
     .select-children{
-      line-height: 23px;
+      line-height: 32px;
       padding: 0 10px;
+      color: rgba(0, 0, 0, 0.65);
       border-bottom: 1px solid rgba(151, 151, 151, 0.198345);
       &:hover{
         background: rgb(233, 230, 230);
@@ -136,6 +147,7 @@ export default class AutoSelect extends Vue {
     }
     .time-children-style{
       text-align: center;
+      line-height: 23px;
     }
 }
 </style>

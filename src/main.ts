@@ -6,6 +6,7 @@ import 'ant-design-vue/dist/antd.less';
 import './index.scss';
 import Antd from 'ant-design-vue';
 import CKEditor from '@ckeditor/ckeditor5-vue';
+require('./mock');
 const app = createApp(App);
 router.beforeEach((to, from, next) => {
   const userName = localStorage.getItem('userName');

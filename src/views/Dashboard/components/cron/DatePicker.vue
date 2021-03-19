@@ -14,13 +14,17 @@
         />
         <AutoSelect style="width:90px" class="line-select" :options="timeList" v-model:value="form.timeType" selectType="time"/>
         <a-radio-group class="date-radio-wrapper" v-show="form.timeType==='Month'" name="radioGroup" v-model:value="form.monthType">
-          <a-radio value="dayMonth">Particular Date</a-radio>
-          <a-radio value="dayWeek">Particular Day of The Week</a-radio>
+          <a-radio v-for="item in monthRadio" :value="item.value" :key="item.value">{{item.title}}</a-radio>
         </a-radio-group>
         <span v-if="form.timeType==='Year'" class="picker-year-item">
-          <a-date-picker v-model:value="form.inputYear" placeholder="Select Time" @ok="onOk">
+          <!-- <a-date-picker v-model:value="form.inputYear" placeholder="Select Time" @ok="onOk">
             <CalendarOutlined />
-          </a-date-picker>
+          </a-date-picker> -->
+          <AutoDatePicker  v-model:value="form.inputYear">
+            <template v-slot>
+              <CalendarOutlined />
+            </template>
+          </AutoDatePicker>
         </span>
       </div>
     </header>
@@ -30,15 +34,22 @@
         <div @click="changeDateValue(item.value)" :class="['picker-week-item', {'picker-week-active':form.inputWeek===item.value}]" v-for="item in weekDate" :key="item">{{item.title}}</div>
       </div>
       <div v-else-if="form.timeType==='Month'&&form.monthType==='dayMonth'" class="picker-month">
-        <div class="picker-month-item" v-for="n in 31" :key="n">
-          <div @click="changeDateValue(n)" :class="[{'picker-month-active':form.inputMonth===n},'picker-month-normal', {'picker-month-unusual':n===31}]">{{n}}</div>
+        <div class="picker-month-item-wrapper">
+          <div class="picker-month-item" v-for="n in 20" :key="n">
+            <div @click="changeDateValue(n)" :class="[{'picker-month-active':form.inputMonth===n},'picker-month-normal']">{{n}}</div>
+          </div>
+        </div>
+        <div class="picker-month-item-wrapper-unusual">
+          <div class="picker-month-item-unusual" v-for="n in 11" :key="n+20">
+            <div @click="changeDateValue(n+20)" :class="[{'picker-month-active':form.inputMonth===n+20},'picker-month-normal']">{{n+20}}</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script lang="ts">
-interface FormType{
+export interface PickerFormType{
   timeType: string;
   monthType: string;
   rate: number;
@@ -47,7 +58,7 @@ interface FormType{
   inputDay: string;
   inputMonth: string;
   inputWeek: string;
-  inputYear: Moment;
+  inputYear: string;
 }
 interface CronType{
   [key: string]: number|string;
@@ -62,22 +73,39 @@ interface CronType{
 import { Options, Vue, } from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import { AutoSelect } from '@/components';
+import AutoDatePicker from '@/components/AutoDatePicker.vue';
 import {
   CalendarOutlined,
 } from '@ant-design/icons-vue';
 import moment, { Moment, } from 'moment';
+import { ExitValueType } from './PreCron.vue';
 // import { isValidCron } from 'cron-validator';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const  cronValidator = require('cron-expression-validator');
 @Options({
   components: {
     CalendarOutlined,
-    AutoSelect
+    AutoSelect,
+    AutoDatePicker
   },
 })
 export default class DatePicker extends Vue {
 
-    @Prop() private dateValue!: string;
+    @Prop() private exitValue?: ExitValueType;
+
+    @Watch('exitValue', { immediate: true, deep: true })
+    private exitValueChange(value: ExitValueType) {
+      if (value) {
+        const { pickerData, pickerCron } = value;
+        this.form = { ...pickerData,
+          ...{
+            inputTime: moment(pickerData.inputTime||'00:00', 'HH:mm'),
+            inputYear: pickerData.inputYear||moment(new Date()).format('YYYY-MM-DD'),
+          }
+        };
+        console.log(pickerCron);
+      }
+    }
     private weekDate = [
       { title: 'MON', value: 1 },
       { title: 'TUE', value: 2 },
@@ -92,13 +120,22 @@ export default class DatePicker extends Vue {
       'Week',
       'Month',
       'Year',
-    ]
+    ];
     private dayweekSelect = [
       '1nd Week',
       '2nd Week',
       '3nd Week',
       '4nd Week',
-    ]
+    ];
+    private monthRadio = [
+      {
+        value: 'dayMonth',
+        title: 'Particular'
+      }, {
+        value: 'dayWeek',
+        title: 'Particular Day of The Week'
+      }
+    ];
     private cron: CronType = {
       second: 0,
       minute: 0,
@@ -108,7 +145,7 @@ export default class DatePicker extends Vue {
       dayWeek: '',
       year: '*'
     }
-    private form: FormType = {
+    private form: PickerFormType = {
       timeType: 'Day',
       monthType: 'dayMonth',
       rate: 0,
@@ -117,7 +154,7 @@ export default class DatePicker extends Vue {
       inputDay: '',
       inputWeek: '',
       inputMonth: '',
-      inputYear: moment(new Date())
+      inputYear: moment(new Date()).format('YYYY-MM-DD')
     }
     private time = '';
     private changeDateValue(value: string|Moment) {
@@ -131,14 +168,14 @@ export default class DatePicker extends Vue {
         this.form.inputMonth = value as string;
         break;
       case 'Year':
-        this.form.inputYear = value as Moment;
+        this.form.inputYear = value as string;
         break;
       }
     }
     private debounceTime: any = null;
 
     @Watch('form', { deep: true })
-    private formChange(value: FormType) {
+    private formChange(value: PickerFormType) {
       if (this.debounceTime) {
         clearTimeout(this.debounceTime);
         this.debounceTime=null;
@@ -224,6 +261,10 @@ export default class DatePicker extends Vue {
       }, 1000);
 
     }
+
+    private deliverForm() {
+      return this.form;
+    }
 }
 </script>
 <style lang="scss" scoped>
@@ -287,16 +328,21 @@ export default class DatePicker extends Vue {
         }
     }
     .picker-month{
-        display: flex;
-        position: relative;
-        flex-direction: row;
-        justify-content: space-around;
         width: 85%;
-        flex-wrap: wrap;
         height: 80px;
         font-size: 12px;
         color: #7C86A2;
-        .picker-month-item{
+        .picker-month-item-wrapper, .picker-month-item-wrapper-unusual{
+          width:100%;
+          display: flex;
+          flex-wrap: wrap;
+          flex-direction: row;
+          justify-content: space-around;
+        }
+        .picker-month-item-wrapper-unusual{
+          width:110%;
+        }
+        .picker-month-item, .picker-month-item-unusual{
             flex: 1 0 10%;
             height: 23px;
             text-align:center;
@@ -317,6 +363,9 @@ export default class DatePicker extends Vue {
               bottom: 0px;
               right:-30px;
             }
+        }
+        .picker-month-item-unusual{
+          flex: 1 0 9%;
         }
     }
   }

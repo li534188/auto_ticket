@@ -143,8 +143,14 @@ export async function generalDaiAccount(data: {
   department: string;
   manager: string;
   issueNum: string;
+  user: string;
   dai_or_ods: string[];
   ticketNum: string[];}) {
   const res = await post('/api/dai-account', data);
+  return res;
+}
+
+export async function getJiraInfo() {
+  const res = await post('/parameter/list-all-employee');
   return res;
 }

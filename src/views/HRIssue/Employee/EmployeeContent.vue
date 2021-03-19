@@ -199,7 +199,8 @@ export default class EmployeeContent extends Vue {
     this.confluenceUrl = '';
     this.percentage = 0;
     this.banCreateAd = true;
-
+    this.accessData = [];
+    this.sopData = [];
     window.clearInterval(this.intervalTime);
   }
 
@@ -264,8 +265,12 @@ export default class EmployeeContent extends Vue {
   }
 
   @Watch('createPwStatus', { deep: true })
-  private pwStatusChange() {
-    this.getComplateJiraInfo();
+  private pwStatusChange(value: PwStatusType, oldvalue: PwStatusType) {
+    const { DAI: { password: daipassword, message: daimessage }, ODS: { password: odspassword, message: odsmessage }} = value;
+    const { DAI: { password: olddaipassword, message: olddaimessage }, ODS: { password: oldodspassword, message: oldodsmessage }} = oldvalue;
+    if (daipassword!==olddaipassword||daimessage!==olddaimessage||odspassword!==oldodspassword||odsmessage!==oldodsmessage) {
+      this.getComplateJiraInfo();
+    }
   }
 
   private init() {
@@ -430,12 +435,9 @@ export default class EmployeeContent extends Vue {
       }
     });
     this.createPwStatus = createPwStatus;
-    const res = await generalDaiAccount({ jobTitle: job_title, company, jiraSummary: name, office: location, department, manager, dai_or_ods: adArr, ticketNum: issureArr, issueNum: this.ticketNumber  });
-    if (res) {
-      this.banCreateAd = false;
-    } else {
-      this.banCreateAd = true;
-    }
+    const storage = window.localStorage;
+    const userName = storage.getItem('userName')||'';
+    await generalDaiAccount({ jobTitle: job_title, company, jiraSummary: name, office: location, user: userName, department, manager, dai_or_ods: adArr, ticketNum: issureArr, issueNum: this.ticketNumber  });
     this.createAdLoading = false;
     // if (res) {
     //   this.createAdLoading = false;
@@ -467,7 +469,7 @@ export default class EmployeeContent extends Vue {
 
   private checkAdCanBeCheck(data: ComplateJiraInfoTypeArr) {
     let flag = true;
-    data.map(item => {
+    data&&data.map(item => {
       if (item.title&&(item.title.indexOf('A/D (ODSDAI)') > -1 || item.title.indexOf('A/D (DAI)') > -1)) {
         if (item.status&&(item.status==='To Do')) {
           flag = false;
@@ -480,7 +482,7 @@ export default class EmployeeContent extends Vue {
   private async getComplateJiraInfo() {
     const { ticketNumber,  jiraName } = this;
     const res = await getCompletedJiraTicket({ jiraSummary: jiraName, issueNum: ticketNumber });
-    if (res!=='False') {
+    if (res!=='Failed') {
       this.secondaryCreation = true;
       this.sopData = res.Sop;
       this.accessData =res.Access;

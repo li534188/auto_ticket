@@ -118,10 +118,4 @@ export default class HRIssue extends Vue {
       font-weight: 600;
     }
   }
-  .menu-icon{
-    width: 15px;
-    height: 15px;
-    margin-right: 10px;
-    color: #6A778B;
-  }
 </style>>

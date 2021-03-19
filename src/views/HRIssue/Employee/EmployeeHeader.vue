@@ -7,7 +7,7 @@
       </div>
       <div class="sloid-divider"/>
     </header>
-    <section class="list-wrapper">
+    <section class="sloid-list-wrapper">
       <a-list item-layout="horizontal" :data-source="hrIssueList">
         <template v-slot:renderItem="{ item, index }">
           <a-list-item  :class="['list-item-devider', {'active': item.issue_number === activeKey}]">
@@ -190,12 +190,12 @@ export default class EmployeeHeader extends Vue {
     .sloid{
       width: 100%;
       padding: 0 10px;
-      height: 700px;
+      height: 750px;
       font-size: 12px;
-    }
-    .list-wrapper{
-      height: 100%;
-      overflow-y: auto;
+      .sloid-list-wrapper{
+        height: calc(100% - 50px)!important;
+        overflow-y: auto;
+      }
     }
     .sloid-divider{
       width: 100%;

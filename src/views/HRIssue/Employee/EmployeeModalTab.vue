@@ -65,8 +65,8 @@
         <template #prefix><SearchOutlined/></template>
       </a-input>
       <div v-if="(filterSelectData&&filterSelectData.length > 0)" class="item-wrapper">
-        <div @click.stop="handleChange(subitem,activeIndex)" class="prompt-item" v-for="(subitem) in filterSelectData" :key="subitem">
-          {{subitem}}
+        <div @click.stop="handleChange(subitem,activeIndex)" :class="['prompt-item', {'added':subitem.status==='added'}]" v-for="(subitem) in filterSelectData" :key="subitem">
+          {{subitem.title}}
         </div>
       </div>
       <div v-else class="item-wrapper-none">
@@ -165,12 +165,15 @@ export default class EmployeeModalTab extends Vue {
 
 
 
-    private handleChange(text: string, index: number) {
+    private handleChange(item: {title: string;status?: string}, index: number) {
+      if (item.status&&item.status==='added') {
+        return;
+      }
       const data = this.tableData[index];
-      data.summary = text;
+      data.summary = item.title;
       data.specialStatus = 'modify';
       this.selectData.forEach(element => {
-        if (element.summary === text) {
+        if (element.summary === item.title) {
           data.RealTask = element.RealTask||'';
           this.selectIds.push(element.RealTask||'');
           if (this.type===ModalType.Access) {
@@ -220,7 +223,7 @@ export default class EmployeeModalTab extends Vue {
     get filterSelectData() {
       const { filterText, selectData, secondaryCreation } = this;
       const list = JSON.parse(JSON.stringify(selectData));
-      const arr: string[] = [];
+      const arr: {title: string; status?: string}[] = [];
       list.map((item: {summary: string}) => {
         const checkRepeat = this.tableData.some((element: ModalDataObj) => {
           return element.summary === item.summary;
@@ -238,10 +241,16 @@ export default class EmployeeModalTab extends Vue {
 
         if (!filterText) {
           if (!checkRepeat&&!complateFlag)
-            arr.push(item.summary);
+            arr.push({ title: item.summary });
+          else {
+            arr.push({ title: item.summary, status: 'added' });
+          }
         } else  if (filterText && item.summary && item.summary.toLowerCase().indexOf(filterText.toLowerCase()) > -1) {
           if (!checkRepeat&&!complateFlag)
-            arr.push(item.summary);
+            arr.push({ title: item.summary });
+          else {
+            arr.push({ title: item.summary, status: 'added' });
+          }
         }
       });
       return arr;
@@ -438,6 +447,9 @@ export default class EmployeeModalTab extends Vue {
           &:hover{
             background-color: #f1f5fc;
           }
+        }
+        .added{
+          color: #979797;
         }
       }
     .icon-dowload{
